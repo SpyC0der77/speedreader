@@ -1,6 +1,7 @@
 "use client";
 
 import { Settings } from "lucide-react";
+import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
@@ -287,20 +288,29 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement {
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-4 py-10 sm:px-8">
-      <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <Dialog.Trigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Open settings"
-            className={cn(
-              "fixed right-4 top-4 z-50 size-9 transition-opacity duration-300 sm:right-8 sm:top-8",
-              isPlaying ? "opacity-40" : "opacity-100",
-            )}
-          >
-            <Settings className="size-5" />
-          </Button>
-        </Dialog.Trigger>
+      <div
+        className={cn(
+          "fixed right-4 top-4 z-50 flex items-center gap-2 transition-opacity duration-300 sm:right-8 sm:top-8",
+          isPlaying ? "opacity-40" : "opacity-100",
+        )}
+      >
+        <Link
+          href="/reader"
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Article Reader
+        </Link>
+        <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <Dialog.Trigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Open settings"
+              className="size-9"
+            >
+              <Settings className="size-5" />
+            </Button>
+          </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay
             className={cn(
@@ -370,7 +380,8 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement {
             </div>
           </Dialog.Content>
         </Dialog.Portal>
-      </Dialog.Root>
+        </Dialog.Root>
+      </div>
       <div className="min-h-0 flex-1 shrink-0" aria-hidden />
       {content}
       <div className="min-h-0 flex-1 shrink-0" aria-hidden />
