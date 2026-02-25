@@ -4,6 +4,8 @@ import { Readability } from "@mozilla/readability";
 import net from "net";
 import dns from "dns";
 
+const FETCH_TIMEOUT_MS = 30_000;
+
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
   "localhost.localdomain",
@@ -97,6 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     const response = await fetch(url, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       headers: {
         "User-Agent":
           "Mozilla/5.0 (compatible; SpeedReader/1.0; +https://github.com)",
@@ -136,6 +139,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Article extraction error:", error);
+    if (error instanceof Error && error.name === "AbortError") {
+      return NextResponse.json(
+        { error: "Request timed out" },
+        { status: 504 }
+      );
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to extract article" },
       { status: 500 }
