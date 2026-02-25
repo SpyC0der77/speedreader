@@ -238,7 +238,7 @@ export function SpeedReader(): React.ReactElement {
         </div>
         {words.length > 0 && (
           <div
-            className={`mt-4 w-full max-w-4xl px-2 transition-opacity duration-300 ${isPlaying ? "opacity-40" : "opacity-100"}`}
+            className={`mx-auto mt-4 w-full max-w-4xl px-2 transition-opacity duration-300 ${isPlaying ? "opacity-40" : "opacity-100"}`}
           >
             <Slider
               min={0}
