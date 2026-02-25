@@ -84,6 +84,8 @@ body {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.708 0 0 / 60%) oklch(0.97 0 0);
 }
 
 .dark {
@@ -118,6 +120,8 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.556 0 0 / 60%) oklch(0.269 0 0);
 }
 
 @layer base {
@@ -127,4 +131,68 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* WebKit (Chrome, Safari, Edge) scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+.reader-article {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.reader-article p {
+  margin-bottom: 1em;
+}
+
+.reader-article p:last-child {
+  margin-bottom: 0;
+}
+
+.reader-article h1,
+.reader-article h2,
+.reader-article h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.reader-article h1:first-child,
+.reader-article h2:first-child,
+.reader-article h3:first-child {
+  margin-top: 0;
+}
+
+.reader-article ul,
+.reader-article ol {
+  margin-bottom: 1em;
+}
+
+.reader-article blockquote {
+  margin: 1em 0;
+}
+
+.reader-article img {
+  height: auto;
+}
+
+.reader-article [data-word-index].speed-reader-highlight {
+  background: oklch(0.488 0.243 264.376 / 40%);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px oklch(0.488 0.243 264.376 / 50%);
 }
