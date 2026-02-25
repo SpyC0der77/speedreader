@@ -63,7 +63,7 @@ interface SpeedReaderPanelProps extends SpeedReaderBaseProps {
 
 type SpeedReaderProps = SpeedReaderFullProps | SpeedReaderPanelProps;
 
-export function SpeedReader(props: SpeedReaderProps): React.ReactElement {
+export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
   const isFull = props.variant === "full";
 
   const [inputText, setInputText] = useState(
@@ -77,7 +77,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [fontSize, setFontSize] = useState<FontSizeKey>("md");
   const [fontFamily, setFontFamily] = useState<FontFamilyKey>("serif");
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const text = isFull ? inputText : (props as SpeedReaderPanelProps).text;
   const words = useMemo(() => parseWords(text), [text]);
