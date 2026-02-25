@@ -224,7 +224,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         {words.length > 0 && (
           <div
             className={cn(
-              "mx-auto mt-4 max-w-4xl px-2 transition-opacity duration-300",
+              "mx-auto mt-4 mb-6 max-w-4xl px-2 transition-opacity duration-300",
               isPlaying ? "opacity-40" : "opacity-100",
             )}
           >
