@@ -33,6 +33,14 @@ export function wordHasPausePunctuation(word: string): boolean {
   return /[,:;—]["']?$|--["']?$/.test(word.trim());
 }
 
+/**
+ * Client-only utility that wraps each word in the HTML with spans containing
+ * data-word-index for highlighting. Depends on window/document (DOMParser).
+ * During SSR (typeof document === "undefined"), returns the unmodified HTML.
+ * Callers must invoke this only from client contexts (e.g., inside useEffect or
+ * a Client Component) so words are indexed/highlighted. For stricter behavior,
+ * consider throwing when document is undefined or guarding call sites.
+ */
 export function wrapWordsInHtml(html: string): string {
   if (typeof document === "undefined") return html;
 

@@ -65,14 +65,15 @@ type SpeedReaderProps = SpeedReaderFullProps | SpeedReaderPanelProps;
 
 export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
   const isFull = props.variant === "full";
+  const controlledWordIndex = props.controlledWordIndex;
 
   const [inputText, setInputText] = useState(
     isFull ? SAMPLE_TEXT : (props as SpeedReaderPanelProps).text,
   );
+  const [wordIndex, setWordIndex] = useState(() => controlledWordIndex ?? 0);
   const [wordsPerMinute, setWordsPerMinute] = useState(
     props.wordsPerMinute ?? 300,
   );
-  const [wordIndex, setWordIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [fontSize, setFontSize] = useState<FontSizeKey>("md");
@@ -81,34 +82,38 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
 
   const text = isFull ? inputText : (props as SpeedReaderPanelProps).text;
   const words = useMemo(() => parseWords(text), [text]);
+  const onWordIndexChange = "onWordIndexChange" in props ? props.onWordIndexChange : undefined;
+  const effectiveWordIndex =
+    controlledWordIndex !== undefined ? controlledWordIndex : wordIndex;
   const activeWordIndex =
-    words.length === 0 ? 0 : Math.min(wordIndex, words.length - 1);
+    words.length === 0 ? 0 : Math.min(effectiveWordIndex, words.length - 1);
   const activeWord = words[activeWordIndex] ?? "";
   const { left, focalCharacter, right } = useMemo(
     () => getWordParts(activeWord),
     [activeWord],
   );
+  const mountedRef = useRef(false);
 
-  useEffect(() => {
-    if (!isFull && text !== inputText) {
-      setInputText(text);
+  function setEffectiveWordIndex(index: number) {
+    if (controlledWordIndex !== undefined) {
+      onWordIndexChange?.(index);
+    } else {
+      setWordIndex(index);
     }
-  }, [text, isFull, inputText]);
-
-  const onWordIndexChange = "onWordIndexChange" in props ? props.onWordIndexChange : undefined;
-  const controlledWordIndex = props.controlledWordIndex;
-  const lastControlledRef = useRef<number | undefined>(undefined);
+  }
 
   useEffect(() => {
-    if (controlledWordIndex === undefined) return;
-    if (lastControlledRef.current === controlledWordIndex) return;
-    lastControlledRef.current = controlledWordIndex;
-    setWordIndex(controlledWordIndex);
-  }, [controlledWordIndex]);
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
-    onWordIndexChange?.(activeWordIndex);
-  }, [activeWordIndex, onWordIndexChange]);
+    if (mountedRef.current) {
+      onWordIndexChange?.(effectiveWordIndex);
+    }
+  }, [effectiveWordIndex, onWordIndexChange]);
 
   useEffect(() => {
     if (!isPlaying || words.length === 0) return;
@@ -134,13 +139,11 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
     const delay = baseMsPerWord + extraDelay;
 
     timeoutRef.current = window.setTimeout(() => {
-      setWordIndex((prev) => {
-        if (prev >= words.length - 1) {
-          setIsPlaying(false);
-          return prev;
-        }
-        return prev + 1;
-      });
+      const next = Math.min(activeWordIndex + 1, words.length - 1);
+      if (next >= words.length - 1) {
+        setIsPlaying(false);
+      }
+      setEffectiveWordIndex(next);
     }, delay);
 
     return () => {
@@ -165,7 +168,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
   function handlePlayPauseRestart() {
     if (words.length === 0) return;
     if (isFinished) {
-      setWordIndex(0);
+      setEffectiveWordIndex(0);
       setIsPlaying(true);
     } else {
       setIsPlaying((prev) => !prev);
@@ -174,7 +177,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
 
   function handleTextChange(value: string) {
     setInputText(value);
-    setWordIndex(0);
+    setEffectiveWordIndex(0);
     setIsPlaying(false);
   }
 
@@ -230,7 +233,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
               max={Math.max(0, words.length - 1)}
               step={1}
               value={[activeWordIndex]}
-              onValueChange={([v]) => setWordIndex(v ?? 0)}
+              onValueChange={([v]) => setEffectiveWordIndex(v ?? 0)}
               className="cursor-pointer"
             />
           </div>

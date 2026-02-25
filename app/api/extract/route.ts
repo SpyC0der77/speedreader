@@ -5,6 +5,7 @@ import net from "net";
 import dns from "dns";
 
 const FETCH_TIMEOUT_MS = 30_000;
+const MAX_HTML_BYTES = 5 * 1024 * 1024; // 5 MB
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -113,7 +114,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const html = await response.text();
+    const contentLength = response.headers.get("content-length");
+    if (contentLength !== null) {
+      const size = parseInt(contentLength, 10);
+      if (!Number.isNaN(size) && size > MAX_HTML_BYTES) {
+        return NextResponse.json(
+          { error: "Response too large" },
+          { status: 413 }
+        );
+      }
+    }
+
+    let html: string;
+    if (contentLength !== null && !Number.isNaN(parseInt(contentLength, 10))) {
+      html = await response.text();
+    } else {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        return NextResponse.json(
+          { error: "No response body" },
+          { status: 502 }
+        );
+      }
+      const chunks: Uint8Array[] = [];
+      let totalBytes = 0;
+      const decoder = new TextDecoder();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          totalBytes += value.length;
+          if (totalBytes > MAX_HTML_BYTES) {
+            reader.cancel();
+            return NextResponse.json(
+              { error: "Response too large" },
+              { status: 413 }
+            );
+          }
+          chunks.push(value);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+      const combined = new Uint8Array(totalBytes);
+      let offset = 0;
+      for (const c of chunks) {
+        combined.set(c, offset);
+        offset += c.length;
+      }
+      html = decoder.decode(combined);
+    }
     const dom = new JSDOM(html, { url });
     const reader = new Readability(dom.window.document);
     const article = reader.parse();

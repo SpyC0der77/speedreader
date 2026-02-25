@@ -84,6 +84,7 @@ body {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
   scrollbar-width: thin;
   scrollbar-color: oklch(0.708 0 0 / 60%) oklch(0.97 0 0);
 }
@@ -120,6 +121,7 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
   scrollbar-width: thin;
   scrollbar-color: oklch(0.556 0 0 / 60%) oklch(0.269 0 0);
 }
@@ -192,7 +194,7 @@ body {
 }
 
 .reader-article [data-word-index].speed-reader-highlight {
-  background: oklch(0.488 0.243 264.376 / 40%);
+  background: oklch(0.488 0.243 264.376 / 50%);
   border-radius: 2px;
-  box-shadow: 0 0 0 1px oklch(0.488 0.243 264.376 / 50%);
+  box-shadow: 0 0 0 1px oklch(0.488 0.243 264.376 / 60%);
 }
