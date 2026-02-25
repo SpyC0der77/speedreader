@@ -130,7 +130,10 @@ export function SpeedReader(): React.ReactElement {
             variant="ghost"
             size="icon"
             aria-label="Open settings"
-            className="fixed right-4 top-4 z-50 size-9 sm:right-8 sm:top-8"
+            className={cn(
+              "fixed right-4 top-4 z-50 size-9 transition-opacity duration-300 sm:right-8 sm:top-8",
+              isPlaying ? "opacity-40" : "opacity-100"
+            )}
           >
             <Settings className="size-5" />
           </Button>
