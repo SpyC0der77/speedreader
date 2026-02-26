@@ -9,7 +9,7 @@ import { ArrowLeft, Loader2, Settings } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { SpeedReader } from "@/components/speed-reader";
 import { Slider } from "@/components/ui/slider";
-import { wrapWordsInHtml } from "@/lib/speed-reader";
+import { extractTextFromHtml, wrapWordsInHtml } from "@/lib/speed-reader";
 import { cn } from "@/lib/utils";
 
 const ArticleBody = forwardRef<
@@ -37,15 +37,27 @@ const ArticleBody = forwardRef<
       `[data-word-index="${wordIndex}"]`,
     ) as HTMLElement | null;
 
-    if (prevHighlightRef.current) {
-      prevHighlightRef.current.classList.remove("speed-reader-highlight");
+    const prevSpan = prevHighlightRef.current;
+    const prevRect = prevSpan?.getBoundingClientRect();
+    if (prevSpan) {
+      prevSpan.classList.remove("speed-reader-highlight");
       prevHighlightRef.current = null;
     }
 
     if (span) {
       span.classList.add("speed-reader-highlight");
       prevHighlightRef.current = span;
-      span.scrollIntoView({ behavior: "smooth", block: "center" });
+      const rect = span.getBoundingClientRect();
+      const lineHeight = rect.height;
+      const isNewLine =
+        !prevRect || Math.abs(rect.top - prevRect.top) > lineHeight * 0.5;
+      const viewportHeight = window.innerHeight;
+      const margin = viewportHeight * 0.2;
+      const isComfortablyVisible =
+        rect.top >= margin && rect.bottom <= viewportHeight - margin;
+      if (isNewLine || !isComfortablyVisible) {
+        span.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     }
   }, [wordIndex, ref]);
 
@@ -76,13 +88,6 @@ interface ArticleData {
   siteName: string | null;
 }
 
-function getTextFromHtml(html: string): string {
-  if (typeof document === "undefined") return "";
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return (div.textContent ?? "").replace(/\s+/g, " ").trim();
-}
-
 const DEFAULT_SENTENCE_END_MS = 500;
 const DEFAULT_SPEECH_BREAK_MS = 250;
 
@@ -102,11 +107,10 @@ export default function ReaderPage() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelHeight, setPanelHeight] = useState(420);
 
+  // Use same word-boundary logic as wrapWordsInHtml so Reader View highlight matches SpeedReader.
   const articleText = useMemo(
-    () =>
-      article?.textContent ??
-      (article ? getTextFromHtml(article.content) : ""),
-    [article?.textContent, article?.content],
+    () => (article ? extractTextFromHtml(article.content) : ""),
+    [article?.content],
   );
 
   useEffect(() => {
