@@ -5,13 +5,9 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
+import { NumberInput } from "@/components/ui/number-input";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   getWordParts,
   parseWords,
@@ -253,23 +249,15 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         >
           {isPlaying ? "Pause" : isFinished ? "Restart" : "Play"}
         </Button>
-        <div className="flex min-w-[200px] max-w-[280px] items-center gap-3">
+        <div className="flex items-center gap-3">
           <span className="shrink-0 text-sm text-muted-foreground">WPM</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="min-w-0 flex-1">
-                <Slider
-                  min={50}
-                  max={1200}
-                  step={25}
-                  value={[wordsPerMinute]}
-                  onValueChange={([v]) => setWordsPerMinute(v ?? 300)}
-                  className="cursor-pointer"
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="top">{wordsPerMinute} wpm</TooltipContent>
-          </Tooltip>
+          <NumberInput
+            value={wordsPerMinute}
+            onChange={setWordsPerMinute}
+            min={50}
+            max={1200}
+            step={50}
+          />
         </div>
       </section>
     </>
