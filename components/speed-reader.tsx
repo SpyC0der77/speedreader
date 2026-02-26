@@ -45,6 +45,7 @@ type FontFamilyKey = keyof typeof FONT_FAMILIES;
 interface SpeedReaderBaseProps {
   wordsPerMinute?: number;
   onWordIndexChange?: (index: number) => void;
+  onComplete?: () => void;
   sentenceEndDurationMsAt250Wpm?: number;
   speechBreakDurationMsAt250Wpm?: number;
   /** When provided, syncs to this index (e.g. when user clicks a word in the article) */
@@ -61,14 +62,26 @@ interface SpeedReaderPanelProps extends SpeedReaderBaseProps {
   className?: string;
 }
 
-type SpeedReaderProps = SpeedReaderFullProps | SpeedReaderPanelProps;
+interface SpeedReaderTestProps extends SpeedReaderBaseProps {
+  variant: "test";
+  text: string;
+  className?: string;
+}
+
+type SpeedReaderProps =
+  | SpeedReaderFullProps
+  | SpeedReaderPanelProps
+  | SpeedReaderTestProps;
 
 export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
   const isFull = props.variant === "full";
+  const isTest = props.variant === "test";
   const controlledWordIndex = props.controlledWordIndex;
 
   const [inputText, setInputText] = useState(
-    isFull ? SAMPLE_TEXT : (props as SpeedReaderPanelProps).text,
+    isFull
+      ? SAMPLE_TEXT
+      : (props as SpeedReaderPanelProps | SpeedReaderTestProps).text,
   );
   const [wordIndex, setWordIndex] = useState(() => controlledWordIndex ?? 0);
   const [wordsPerMinute, setWordsPerMinute] = useState(
@@ -80,7 +93,8 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
   const [fontFamily, setFontFamily] = useState<FontFamilyKey>("serif");
   const timeoutRef = useRef<number | null>(null);
 
-  const text = isFull ? inputText : (props as SpeedReaderPanelProps).text;
+  const text =
+    isFull ? inputText : (props as SpeedReaderPanelProps | SpeedReaderTestProps).text;
   const words = useMemo(() => parseWords(text), [text]);
   const onWordIndexChange = "onWordIndexChange" in props ? props.onWordIndexChange : undefined;
   const effectiveWordIndex =
@@ -164,6 +178,14 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
 
   const isFinished =
     words.length > 0 && !isPlaying && activeWordIndex >= words.length - 1;
+  const hasCalledCompleteRef = useRef(false);
+
+  useEffect(() => {
+    if (isFinished && props.onComplete && !hasCalledCompleteRef.current) {
+      hasCalledCompleteRef.current = true;
+      props.onComplete();
+    }
+  }, [isFinished, props.onComplete]);
 
   function handlePlayPauseRestart() {
     if (words.length === 0) return;
@@ -253,24 +275,26 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         >
           {isPlaying ? "Pause" : isFinished ? "Restart" : "Play"}
         </Button>
-        <div className="flex min-w-[200px] max-w-[280px] items-center gap-3">
-          <span className="shrink-0 text-sm text-muted-foreground">WPM</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="min-w-0 flex-1">
-                <Slider
-                  min={50}
-                  max={1200}
-                  step={25}
-                  value={[wordsPerMinute]}
-                  onValueChange={([v]) => setWordsPerMinute(v ?? 300)}
-                  className="cursor-pointer"
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="top">{wordsPerMinute} wpm</TooltipContent>
-          </Tooltip>
-        </div>
+        {!isTest && (
+          <div className="flex min-w-[200px] max-w-[280px] items-center gap-3">
+            <span className="shrink-0 text-sm text-muted-foreground">WPM</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="min-w-0 flex-1">
+                  <Slider
+                    min={50}
+                    max={1200}
+                    step={25}
+                    value={[wordsPerMinute]}
+                    onValueChange={([v]) => setWordsPerMinute(v ?? 300)}
+                    className="cursor-pointer"
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top">{wordsPerMinute} wpm</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
       </section>
     </>
   );
@@ -289,6 +313,13 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
     );
   }
 
+  if (props.variant === "test") {
+    const { className } = props;
+    return (
+      <div className={cn("flex flex-col gap-4", className)}>{content}</div>
+    );
+  }
+
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-4 py-10 sm:px-8">
       <div
@@ -302,6 +333,12 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
           className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Article Reader
+        </Link>
+        <Link
+          href="/test"
+          className="ml-4 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Reading Test
         </Link>
         <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <Dialog.Trigger asChild>
