@@ -236,7 +236,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
 
       <section
         className={cn(
-          "flex max-w-4xl flex-wrap items-center justify-center gap-4 transition-opacity duration-300",
+          "flex w-full flex-wrap items-center justify-center gap-4 transition-opacity duration-300",
           isPlaying ? "opacity-40" : "opacity-100",
         )}
       >
