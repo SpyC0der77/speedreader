@@ -71,7 +71,6 @@ type SpeedReaderProps =
 
 export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
   const isFull = props.variant === "full";
-  const isTest = props.variant === "test";
   const controlledWordIndex = props.controlledWordIndex;
 
   const [inputText, setInputText] = useState(
@@ -270,26 +269,6 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         >
           {isPlaying ? "Pause" : isFinished ? "Restart" : "Play"}
         </Button>
-        {!isTest && (
-          <div className="flex min-w-[200px] max-w-[280px] items-center gap-3">
-            <span className="shrink-0 text-sm text-muted-foreground">WPM</span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="min-w-0 flex-1">
-                  <Slider
-                    min={50}
-                    max={1200}
-                    step={25}
-                    value={[wordsPerMinute]}
-                    onValueChange={([v]) => setWordsPerMinute(v ?? 300)}
-                    className="cursor-pointer"
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top">{wordsPerMinute} wpm</TooltipContent>
-            </Tooltip>
-          </div>
-        )}
         <NumberInput
           value={wordsPerMinute}
           onChange={setWordsPerMinute}
