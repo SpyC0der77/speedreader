@@ -5,13 +5,9 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
+import { NumberInput } from "@/components/ui/number-input";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   getWordParts,
   parseWords,
@@ -237,8 +233,6 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
             isPlaying ? "opacity-40" : "opacity-100",
           )}
         >
-          <p>{wordsPerMinute} wpm</p>
-          <p>•</p>
           <p>
             {words.length === 0 ? 0 : activeWordIndex + 1}/{words.length}
           </p>
@@ -264,12 +258,13 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
 
       <section
         className={cn(
-          "flex max-w-4xl flex-wrap items-center justify-center gap-4 transition-opacity duration-300",
+          "flex w-full flex-wrap items-center justify-center gap-4 transition-opacity duration-300",
           isPlaying ? "opacity-40" : "opacity-100",
         )}
       >
         <Button
           variant="outline"
+          size="lg"
           onClick={handlePlayPauseRestart}
           disabled={words.length === 0}
         >
@@ -295,6 +290,14 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
             </Tooltip>
           </div>
         )}
+        <NumberInput
+          value={wordsPerMinute}
+          onChange={setWordsPerMinute}
+          min={50}
+          max={1200}
+          step={50}
+          unit="wpm"
+        />
       </section>
     </>
   );

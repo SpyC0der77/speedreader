@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 import { Readability } from "@mozilla/readability";
 import net from "net";
 import dns from "dns";
@@ -164,8 +164,12 @@ export async function POST(request: NextRequest) {
       }
       html = decoder.decode(combined);
     }
-    const dom = new JSDOM(html, { url });
-    const reader = new Readability(dom.window.document);
+    const safeUrl = url.replace(/"/g, "&quot;");
+    const htmlWithBase = html.includes("<head")
+      ? html.replace(/<head/i, `<head><base href="${safeUrl}">`)
+      : html;
+    const { document } = parseHTML(htmlWithBase);
+    const reader = new Readability(document);
     const article = reader.parse();
 
     if (!article) {
