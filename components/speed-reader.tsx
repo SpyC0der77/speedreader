@@ -244,21 +244,20 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
       >
         <Button
           variant="outline"
+          size="lg"
           onClick={handlePlayPauseRestart}
           disabled={words.length === 0}
         >
           {isPlaying ? "Pause" : isFinished ? "Restart" : "Play"}
         </Button>
-        <div className="flex items-center gap-3">
-          <span className="shrink-0 text-sm text-muted-foreground">WPM</span>
-          <NumberInput
-            value={wordsPerMinute}
-            onChange={setWordsPerMinute}
-            min={50}
-            max={1200}
-            step={50}
-          />
-        </div>
+        <NumberInput
+          value={wordsPerMinute}
+          onChange={setWordsPerMinute}
+          min={50}
+          max={1200}
+          step={50}
+          unit="wpm"
+        />
       </section>
     </>
   );

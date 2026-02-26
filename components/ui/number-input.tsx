@@ -10,6 +10,7 @@ interface NumberInputProps {
   min?: number;
   max?: number;
   step?: number;
+  unit?: string;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export function NumberInput({
   min = 0,
   max = Infinity,
   step = 1,
+  unit,
   className,
 }: NumberInputProps) {
   const increment = () => onChange(Math.min(max, value + step));
@@ -47,14 +49,19 @@ export function NumberInput({
         <Minus className="h-4 w-4" />
       </Button>
 
-      <input
-        type="number"
-        value={value}
-        onChange={handleInputChange}
-        min={min}
-        max={max}
-        className="w-16 text-center bg-transparent border-x border-input px-2 py-2 font-semibold focus:outline-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-moz-number-spin-up]:hidden [&::-moz-number-spin-down]:hidden"
-      />
+      <div className="flex items-baseline justify-center gap-0.5 border-x border-input bg-transparent px-3 py-2">
+        <input
+          type="number"
+          value={value}
+          onChange={handleInputChange}
+          min={min}
+          max={max}
+          className="w-14 bg-transparent text-center font-semibold focus:outline-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-moz-number-spin-up]:hidden [&::-moz-number-spin-down]:hidden"
+        />
+        {unit && (
+          <span className="text-xs text-muted-foreground">{unit}</span>
+        )}
+      </div>
 
       <Button
         onClick={increment}
