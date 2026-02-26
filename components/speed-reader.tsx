@@ -211,8 +211,6 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
             isPlaying ? "opacity-40" : "opacity-100",
           )}
         >
-          <p>{wordsPerMinute} wpm</p>
-          <p>•</p>
           <p>
             {words.length === 0 ? 0 : activeWordIndex + 1}/{words.length}
           </p>
