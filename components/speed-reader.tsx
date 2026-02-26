@@ -71,6 +71,7 @@ type SpeedReaderProps =
 
 export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
   const isFull = props.variant === "full";
+  const isTest = props.variant === "test";
   const controlledWordIndex = props.controlledWordIndex;
 
   const [inputText, setInputText] = useState(
@@ -236,7 +237,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
             {words.length === 0 ? 0 : activeWordIndex + 1}/{words.length}
           </p>
         </div>
-        {words.length > 0 && (
+        {words.length > 0 && !isTest && (
           <div
             className={cn(
               "mx-auto mt-4 mb-6 max-w-4xl px-2 transition-opacity duration-300",
@@ -269,14 +270,16 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         >
           {isPlaying ? "Pause" : isFinished ? "Restart" : "Play"}
         </Button>
-        <NumberInput
-          value={wordsPerMinute}
-          onChange={setWordsPerMinute}
-          min={50}
-          max={1200}
-          step={50}
-          unit="wpm"
-        />
+        {!isTest && (
+          <NumberInput
+            value={wordsPerMinute}
+            onChange={setWordsPerMinute}
+            min={50}
+            max={1200}
+            step={50}
+            unit="wpm"
+          />
+        )}
       </section>
     </>
   );
