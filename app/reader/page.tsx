@@ -12,20 +12,45 @@ import { Slider } from "@/components/ui/slider";
 import { extractTextFromHtml, wrapWordsInHtml } from "@/lib/speed-reader";
 import { cn } from "@/lib/utils";
 
+interface MediaPreview {
+  src: string;
+  type: "image" | "video" | "iframe";
+}
+
 interface ArticleBodyProps {
   html: string;
   wordIndex: number;
   onWordClick?: (index: number) => void;
+  onMediaClick?: (media: MediaPreview) => void;
   scrollToWord?: (span: HTMLElement) => void;
 }
 
 const ArticleBody = forwardRef<HTMLDivElement, ArticleBodyProps>(function ArticleBody(
-  { html, wordIndex, onWordClick, scrollToWord },
+  { html, wordIndex, onWordClick, onMediaClick, scrollToWord },
   ref,
 ) {
   const prevHighlightRef = useRef<HTMLElement | null>(null);
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    const media = (e.target as HTMLElement).closest("img, video, iframe");
+    if (media && onMediaClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (media instanceof HTMLImageElement) {
+        onMediaClick({ src: media.src, type: "image" });
+        return;
+      }
+      if (media instanceof HTMLVideoElement) {
+        const src = media.currentSrc || media.src || media.querySelector("source")?.getAttribute("src");
+        if (src) onMediaClick({ src, type: "video" });
+        return;
+      }
+      if (media instanceof HTMLIFrameElement) {
+        onMediaClick({ src: media.src, type: "iframe" });
+        return;
+      }
+    }
+
     const target = (e.target as HTMLElement).closest("[data-word-index]");
     if (target) {
       const index = parseInt(target.getAttribute("data-word-index") ?? "0", 10);
@@ -75,9 +100,9 @@ const ArticleBody = forwardRef<HTMLDivElement, ArticleBodyProps>(function Articl
   return (
     <div
       ref={ref}
-      onClick={onWordClick ? handleClick : undefined}
+      onClick={(onWordClick || onMediaClick) ? handleClick : undefined}
       className={cn(
-        "reader-article space-y-4 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_p]:leading-7 [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-4 [&_blockquote]:border-muted-foreground/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_img]:rounded-lg [&_img]:max-w-full",
+        "reader-article space-y-4 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_p]:leading-7 [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:border-l-4 [&_blockquote]:border-muted-foreground/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_img]:rounded-lg [&_img]:max-w-full [&_img]:cursor-pointer [&_video]:cursor-pointer [&_iframe]:cursor-pointer",
         onWordClick &&
           "cursor-pointer [&_[data-word-index]]:cursor-pointer [&_[data-word-index]]:rounded-sm [&_[data-word-index]]:transition-colors [&_[data-word-index]]:hover:bg-muted/50",
       )}
@@ -118,6 +143,7 @@ export default function ReaderPage() {
     DEFAULT_SPEECH_BREAK_MS,
   );
   const [showArticleOnMobile, setShowArticleOnMobile] = useState(false);
+  const [mediaPreview, setMediaPreview] = useState<MediaPreview | null>(null);
   const articleBodyRef = useRef<HTMLDivElement>(null);
   const articleHeaderRef = useRef<HTMLElement>(null);
   const articleScrollContainerRef = useRef<HTMLDivElement>(null);
@@ -172,6 +198,16 @@ export default function ReaderPage() {
   function handleWordClick(index: number) {
     setWordIndex(index);
     setShowArticleOnMobile(false);
+  }
+
+  function handleMediaClick(media: MediaPreview) {
+    try {
+      const url = new URL(media.src, window.location.href);
+      if (!["http:", "https:"].includes(url.protocol)) return;
+      setMediaPreview({ ...media, src: url.href });
+    } catch {
+      // Invalid URL, ignore
+    }
   }
 
   const COMPACT_VIEW_MIN_HEIGHT = 650;
@@ -407,6 +443,7 @@ export default function ReaderPage() {
                     html={wrappedContent ?? article.content}
                     wordIndex={wordIndex}
                     onWordClick={handleWordClick}
+                    onMediaClick={handleMediaClick}
                     scrollToWord={scrollToWordInArticleArea}
                   />
                 </div>
@@ -454,6 +491,47 @@ export default function ReaderPage() {
           />
         </div>
       )}
+
+      <Dialog.Root open={!!mediaPreview} onOpenChange={(open) => !open && setMediaPreview(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay
+            className={cn(
+              "fixed inset-0 z-50 bg-black/90",
+              "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            )}
+          />
+          <Dialog.Content
+            className={cn(
+              "fixed left-1/2 top-1/2 z-50 max-h-[90vh] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-white/10 bg-black p-2 focus:outline-none",
+              "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            )}
+          >
+            {mediaPreview?.type === "image" && (
+              <img
+                src={mediaPreview.src}
+                alt="Preview"
+                className="max-h-[85vh] max-w-full object-contain"
+              />
+            )}
+            {mediaPreview?.type === "video" && (
+              <video
+                src={mediaPreview.src}
+                controls
+                autoPlay
+                className="max-h-[85vh] max-w-full"
+              />
+            )}
+            {mediaPreview?.type === "iframe" && (
+              <iframe
+                src={mediaPreview.src}
+                title="Embedded media"
+                className="h-[85vh] w-[90vw] max-w-4xl border-0"
+                allowFullScreen
+              />
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
