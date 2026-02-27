@@ -12,10 +12,17 @@ import { Slider } from "@/components/ui/slider";
 import { extractTextFromHtml, wrapWordsInHtml } from "@/lib/speed-reader";
 import { cn } from "@/lib/utils";
 
-const ArticleBody = forwardRef<
-  HTMLDivElement,
-  { html: string; wordIndex: number; onWordClick?: (index: number) => void }
->(function ArticleBody({ html, wordIndex, onWordClick }, ref) {
+interface ArticleBodyProps {
+  html: string;
+  wordIndex: number;
+  onWordClick?: (index: number) => void;
+  scrollToWord?: (span: HTMLElement) => void;
+}
+
+const ArticleBody = forwardRef<HTMLDivElement, ArticleBodyProps>(function ArticleBody(
+  { html, wordIndex, onWordClick, scrollToWord },
+  ref,
+) {
   const prevHighlightRef = useRef<HTMLElement | null>(null);
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -56,10 +63,14 @@ const ArticleBody = forwardRef<
       const isComfortablyVisible =
         rect.top >= margin && rect.bottom <= viewportHeight - margin;
       if (isNewLine || !isComfortablyVisible) {
-        span.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (scrollToWord) {
+          scrollToWord(span);
+        } else {
+          span.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
       }
     }
-  }, [wordIndex, ref]);
+  }, [wordIndex, ref, scrollToWord]);
 
   return (
     <div
@@ -108,8 +119,39 @@ export default function ReaderPage() {
   );
   const [showArticleOnMobile, setShowArticleOnMobile] = useState(false);
   const articleBodyRef = useRef<HTMLDivElement>(null);
+  const articleHeaderRef = useRef<HTMLElement>(null);
+  const articleScrollContainerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelHeight, setPanelHeight] = useState(420);
+
+  function scrollToWordInArticleArea(span: HTMLElement) {
+    const header = articleHeaderRef.current;
+    const panel = panelRef.current;
+    const scrollContainer = articleScrollContainerRef.current;
+    const headerRect = header?.getBoundingClientRect();
+    const panelRect = panel?.getBoundingClientRect();
+    const spanRect = span.getBoundingClientRect();
+    const spanCenter = spanRect.top + spanRect.height / 2;
+
+    const isScrollable =
+      scrollContainer &&
+      getComputedStyle(scrollContainer).overflow !== "visible";
+    if (isScrollable && scrollContainer) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const visibleCenter =
+        containerRect.top + containerRect.height / 2;
+      const delta = spanCenter - visibleCenter;
+      scrollContainer.scrollBy({ top: delta, behavior: "smooth" });
+    } else if (headerRect && panelRect) {
+      const visibleTop = Math.max(headerRect.bottom, 0);
+      const visibleBottom = panelRect.top;
+      const visibleCenter = (visibleTop + visibleBottom) / 2;
+      const delta = spanCenter - visibleCenter;
+      window.scrollBy({ top: delta, behavior: "smooth" });
+    } else {
+      span.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
 
   // Use same word-boundary logic as wrapWordsInHtml so Reader View highlight matches SpeedReader.
   const articleText = useMemo(
@@ -303,7 +345,10 @@ export default function ReaderPage() {
 
         {article && (
           <article className="reader-content flex min-h-0 flex-1 flex-col">
-            <header className={cn("shrink-0", isCompactView ? "mb-4" : "mb-8")}>
+            <header
+              ref={articleHeaderRef}
+              className={cn("shrink-0", isCompactView ? "mb-4" : "mb-8")}
+            >
               {(article.siteName || article.byline) && (
                 <p className="mb-2 text-sm text-muted-foreground">
                   {[article.siteName, article.byline]
@@ -345,6 +390,7 @@ export default function ReaderPage() {
 
             <div className="relative flex min-h-0 flex-1 flex-col">
               <div
+                ref={articleScrollContainerRef}
                 className={cn(
                   "min-h-0 flex-1 flex-col overflow-auto",
                   showArticleOnMobile || !isCompactView ? "flex" : "hidden",
@@ -356,6 +402,7 @@ export default function ReaderPage() {
                   html={wrappedContent ?? article.content}
                   wordIndex={wordIndex}
                   onWordClick={handleWordClick}
+                  scrollToWord={scrollToWordInArticleArea}
                 />
               </div>
 
