@@ -132,7 +132,7 @@ export default function ReaderPage() {
     setShowArticleOnMobile(false);
   }
 
-  const COMPACT_VIEW_MIN_HEIGHT = 900;
+  const COMPACT_VIEW_MIN_HEIGHT = 750;
 
   const [isCompactView, setIsCompactView] = useState(true);
   useEffect(() => {
