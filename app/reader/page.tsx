@@ -9,7 +9,11 @@ import { ArrowLeft, BookOpen, Gauge, Loader2, Settings } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { SpeedReader } from "@/components/speed-reader";
 import { Slider } from "@/components/ui/slider";
-import { extractTextFromHtml, wrapWordsInHtml } from "@/lib/speed-reader";
+import {
+  attachTrailingCommasToLinks,
+  extractTextFromHtml,
+  wrapWordsInHtml,
+} from "@/lib/speed-reader";
 import { cn } from "@/lib/utils";
 
 interface MediaPreview {
@@ -179,21 +183,27 @@ export default function ReaderPage() {
     }
   }, [articleHeaderRef, panelRef, articleScrollContainerRef]);
 
-  // Use same word-boundary logic as wrapWordsInHtml so Reader View highlight matches SpeedReader.
-  const articleText = useMemo(
-    () => (article ? extractTextFromHtml(article.content) : ""),
+  // Preprocess content so trailing commas after links are attached to the link text.
+  const processedContent = useMemo(
+    () => (article?.content ? attachTrailingCommasToLinks(article.content) : null),
     [article?.content],
   );
 
+  // Use same word-boundary logic as wrapWordsInHtml so Reader View highlight matches SpeedReader.
+  const articleText = useMemo(
+    () => (processedContent ? extractTextFromHtml(processedContent) : ""),
+    [processedContent],
+  );
+
   useEffect(() => {
-    if (!article?.content) {
+    if (!processedContent) {
       setWrappedContent(null);
       return;
     }
-    setWrappedContent(wrapWordsInHtml(article.content));
+    setWrappedContent(wrapWordsInHtml(processedContent));
     setWordIndex(0);
     setShowArticleOnMobile(false);
-  }, [article?.content]);
+  }, [processedContent]);
 
   function handleWordClick(index: number) {
     setWordIndex(index);
@@ -440,7 +450,7 @@ export default function ReaderPage() {
                 >
                   <ArticleBody
                     ref={articleBodyRef}
-                    html={wrappedContent ?? article.content}
+                    html={wrappedContent ?? processedContent ?? article?.content ?? ""}
                     wordIndex={wordIndex}
                     onWordClick={handleWordClick}
                     onMediaClick={handleMediaClick}

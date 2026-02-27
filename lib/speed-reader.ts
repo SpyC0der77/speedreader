@@ -34,6 +34,19 @@ export function wordHasPausePunctuation(word: string): boolean {
 }
 
 /**
+ * Preprocesses HTML so trailing commas after links are moved inside the link.
+ * E.g. `<a href="...">link</a>, ` becomes `<a href="...">link,</a> `.
+ * This ensures the comma is attached to the last word of the link for
+ * parseWords/wrapWordsInHtml, rather than being treated as its own word.
+ */
+export function attachTrailingCommasToLinks(html: string): string {
+  return html.replace(/(<\/a>)(\s*,\s*)/g, (_, tag, punct) => {
+    const trailingSpace = /\s$/.test(punct) ? " " : "";
+    return "," + tag + trailingSpace;
+  });
+}
+
+/**
  * Calculates total reading time in ms for a range of words, using the same
  * timing logic as playback: base ms/word from WPM plus scaled punctuation delays.
  */
