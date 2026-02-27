@@ -56,6 +56,8 @@ interface SpeedReaderPanelProps extends SpeedReaderBaseProps {
   variant: "panel";
   text: string;
   className?: string;
+  /** When true, the word display area grows to fill available space (e.g. mobile full-screen) */
+  fillHeight?: boolean;
 }
 
 interface SpeedReaderTestProps extends SpeedReaderBaseProps {
@@ -201,27 +203,54 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
 
   if (!isFull && words.length === 0) return null;
 
+  const isPanelFillHeight =
+    props.variant === "panel" && (props as SpeedReaderPanelProps).fillHeight;
+
   const wordDisplayClassName = isFull
     ? cn(FONT_SIZES[fontSize].className, FONT_FAMILIES[fontFamily].className)
-    : "text-5xl font-serif sm:text-6xl";
+    : isPanelFillHeight
+      ? "text-4xl font-serif sm:text-5xl md:text-6xl"
+      : "text-5xl font-serif sm:text-6xl";
 
   const content = (
     <>
-      <section className="w-full shrink-0">
-        <div className="relative mx-auto flex h-60 w-full max-w-4xl items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/50">
-          <div className="pointer-events-none absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/20" />
-          <div className="pointer-events-none absolute inset-x-0 top-14 h-px bg-white/12" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-14 h-px bg-white/12" />
+      <section
+        className={cn(
+          "w-full",
+          isPanelFillHeight ? "flex min-h-0 flex-1 flex-col" : "shrink-0",
+        )}
+      >
+        <div
+          className={cn(
+            "relative mx-auto flex w-full max-w-4xl items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/80 sm:rounded-2xl dark:border-white/10 dark:bg-black/50",
+            isPanelFillHeight ? "min-h-48 flex-1" : "h-60",
+          )}
+        >
+          <div className="pointer-events-none absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border dark:bg-white/20" />
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 h-px bg-border/80 dark:bg-white/12",
+              isPanelFillHeight ? "top-8 sm:top-14" : "top-14",
+            )}
+          />
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 h-px bg-border/80 dark:bg-white/12",
+              isPanelFillHeight ? "bottom-8 sm:bottom-14" : "bottom-14",
+            )}
+          />
 
           <div
             className={cn(
-              "grid w-full max-w-2xl grid-cols-[1fr_auto_1fr] items-baseline px-6 leading-none",
+              "grid w-full max-w-2xl grid-cols-[1fr_auto_1fr] items-baseline px-4 leading-none sm:px-6",
               wordDisplayClassName,
             )}
           >
-            <span className="justify-self-end pr-1 text-zinc-100">{left}</span>
+            <span className="justify-self-end pr-1 text-muted-foreground dark:text-zinc-100">
+              {left}
+            </span>
             <span className="text-rose-500">{focalCharacter || "•"}</span>
-            <span className="justify-self-start pl-1 text-zinc-100">
+            <span className="justify-self-start pl-1 text-muted-foreground dark:text-zinc-100">
               {right}
             </span>
           </div>
@@ -240,7 +269,8 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         {words.length > 0 && !isTest && (
           <div
             className={cn(
-              "mx-auto mt-4 mb-6 max-w-4xl px-2 transition-opacity duration-300",
+              "mx-auto mt-4 w-full max-w-4xl shrink-0 px-2 transition-opacity duration-300",
+              isPanelFillHeight ? "mb-4 sm:mb-6" : "mb-6",
               isPlaying ? "opacity-40" : "opacity-100",
             )}
           >
@@ -289,7 +319,10 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
     return (
       <div
         className={cn(
-          "flex flex-col gap-4 border-t border-border bg-background/95 px-4 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-8",
+          "flex flex-col gap-4 bg-background px-4 py-4 sm:px-8",
+          !isPanelFillHeight &&
+            "border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+          isPanelFillHeight && "min-h-0",
           className,
         )}
       >
