@@ -396,30 +396,26 @@ export default function ReaderPage() {
             </header>
 
             <div className="relative flex min-h-0 flex-1 flex-col">
-              <div
-                ref={articleScrollContainerRef}
-                className={cn(
-                  "min-h-0 flex-1 flex-col overflow-auto",
-                  showArticleOnMobile || !isCompactView ? "flex" : "hidden",
-                  !isCompactView && "flex-none overflow-visible",
-                )}
-              >
-                <ArticleBody
-                  ref={articleBodyRef}
-                  html={wrappedContent ?? article.content}
-                  wordIndex={wordIndex}
-                  onWordClick={handleWordClick}
-                  scrollToWord={scrollToWordInArticleArea}
-                />
-              </div>
-
-              {articleText && (
+              {showArticleOnMobile || !isCompactView ? (
                 <div
+                  ref={articleScrollContainerRef}
                   className={cn(
-                    "flex min-h-0 flex-1 flex-col",
-                    (!isCompactView || showArticleOnMobile) && "hidden",
+                    "min-h-0 flex-1 flex-col overflow-auto",
+                    !isCompactView && "flex-none overflow-visible",
                   )}
                 >
+                  <ArticleBody
+                    ref={articleBodyRef}
+                    html={wrappedContent ?? article.content}
+                    wordIndex={wordIndex}
+                    onWordClick={handleWordClick}
+                    scrollToWord={scrollToWordInArticleArea}
+                  />
+                </div>
+              ) : null}
+
+              {articleText && isCompactView && !showArticleOnMobile ? (
+                <div className="flex min-h-0 flex-1 flex-col">
                   <SpeedReader
                     key={article.content}
                     variant="panel"
@@ -432,7 +428,7 @@ export default function ReaderPage() {
                     className="flex-1 min-h-0 justify-center border-0"
                   />
                 </div>
-              )}
+              ) : null}
             </div>
           </article>
         )}
