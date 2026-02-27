@@ -9,6 +9,7 @@ import { NumberInput } from "@/components/ui/number-input";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  calculateReadingTimeMs,
   getWordParts,
   parseWords,
   wordEndsSentence,
@@ -178,6 +179,32 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
     words.length > 0 && !isPlaying && activeWordIndex >= words.length - 1;
   const hasCalledCompleteRef = useRef(false);
 
+  const remainingReadingTimeMs = useMemo(
+    () =>
+      calculateReadingTimeMs(
+        words,
+        wordsPerMinute,
+        props.sentenceEndDurationMsAt250Wpm ?? SENTENCE_END_DELAY_MS_AT_250_WPM,
+        props.speechBreakDurationMsAt250Wpm ?? PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM,
+        activeWordIndex,
+        words.length - 1,
+      ),
+    [
+      words,
+      wordsPerMinute,
+      activeWordIndex,
+      props.sentenceEndDurationMsAt250Wpm,
+      props.speechBreakDurationMsAt250Wpm,
+    ],
+  );
+
+  const readingTimeLabel =
+    remainingReadingTimeMs >= 60000
+      ? `~${Math.round(remainingReadingTimeMs / 60000)} min`
+      : remainingReadingTimeMs >= 1000
+        ? `~${Math.round(remainingReadingTimeMs / 1000)} sec`
+        : null;
+
   useEffect(() => {
     if (isFinished && props.onComplete && !hasCalledCompleteRef.current) {
       hasCalledCompleteRef.current = true;
@@ -264,6 +291,9 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         >
           <p>
             {words.length === 0 ? 0 : activeWordIndex + 1}/{words.length}
+            {readingTimeLabel && (
+              <span className="ml-2">· {readingTimeLabel}</span>
+            )}
           </p>
         </div>
         {words.length > 0 && !isTest && (
