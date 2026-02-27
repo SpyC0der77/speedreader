@@ -132,7 +132,7 @@ export default function ReaderPage() {
     setShowArticleOnMobile(false);
   }
 
-  const COMPACT_VIEW_MIN_HEIGHT = 700;
+  const COMPACT_VIEW_MIN_HEIGHT = 900;
 
   const [isCompactView, setIsCompactView] = useState(true);
   useEffect(() => {
@@ -140,8 +140,7 @@ export default function ReaderPage() {
     const mqTall = window.matchMedia(
       `(min-height: ${COMPACT_VIEW_MIN_HEIGHT}px)`,
     );
-    const update = () =>
-      setIsCompactView(!(mqWide.matches && mqTall.matches));
+    const update = () => setIsCompactView(!(mqWide.matches && mqTall.matches));
     update();
     mqWide.addEventListener("change", update);
     mqTall.addEventListener("change", update);
