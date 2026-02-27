@@ -1,7 +1,7 @@
 "use client";
 
 import DOMPurify from "dompurify";
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,7 +124,7 @@ export default function ReaderPage() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelHeight, setPanelHeight] = useState(420);
 
-  function scrollToWordInArticleArea(span: HTMLElement) {
+  const scrollToWordInArticleArea = useCallback((span: HTMLElement) => {
     const header = articleHeaderRef.current;
     const panel = panelRef.current;
     const scrollContainer = articleScrollContainerRef.current;
@@ -151,7 +151,7 @@ export default function ReaderPage() {
     } else {
       span.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }
+  }, [articleHeaderRef, panelRef, articleScrollContainerRef]);
 
   // Use same word-boundary logic as wrapWordsInHtml so Reader View highlight matches SpeedReader.
   const articleText = useMemo(
@@ -186,11 +186,9 @@ export default function ReaderPage() {
     update();
     mqWide.addEventListener("change", update);
     mqTall.addEventListener("change", update);
-    window.addEventListener("resize", update);
     return () => {
       mqWide.removeEventListener("change", update);
       mqTall.removeEventListener("change", update);
-      window.removeEventListener("resize", update);
     };
   }, []);
 
@@ -414,7 +412,7 @@ export default function ReaderPage() {
                 </div>
               ) : null}
 
-              {articleText && isCompactView && !showArticleOnMobile ? (
+              {articleText && isCompactView && !showArticleOnMobile && (
                 <div className="flex min-h-0 flex-1 flex-col">
                   <SpeedReader
                     key={article.content}
@@ -428,7 +426,7 @@ export default function ReaderPage() {
                     className="flex-1 min-h-0 justify-center border-0"
                   />
                 </div>
-              ) : null}
+              )}
             </div>
           </article>
         )}
@@ -443,14 +441,8 @@ export default function ReaderPage() {
         )}
       </main>
 
-      {article && articleText && (
-        <div
-          ref={panelRef}
-          className={cn(
-            "fixed bottom-0 left-0 right-0 z-20",
-            isCompactView ? "hidden" : "block",
-          )}
-        >
+      {article && articleText && !isCompactView && (
+        <div ref={panelRef} className="fixed bottom-0 left-0 right-0 z-20">
           <SpeedReader
             key={article.content}
             variant="panel"
