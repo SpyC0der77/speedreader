@@ -198,3 +198,16 @@ body {
   border-radius: 2px;
   box-shadow: 0 0 0 1px oklch(0.488 0.243 264.376 / 60%);
 }
+
+/* Reduce motion: disable animations and transitions */
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+[data-reduce-motion="true"] {
+  scroll-behavior: auto;
+}

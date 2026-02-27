@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Trophy } from "lucide-react";
+import { useReduceTransparency } from "@/lib/reduce-transparency-context";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SpeedReader } from "@/components/speed-reader";
 
@@ -63,6 +65,7 @@ const READING_LEVELS = [
 type Stage = "reading" | "questions" | "complete";
 
 export default function ReadingTestPage() {
+  const { reduceTransparency } = useReduceTransparency();
   const [levelIndex, setLevelIndex] = useState(0);
   const [stage, setStage] = useState<Stage>("reading");
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
@@ -116,7 +119,14 @@ export default function ReadingTestPage() {
   if (stage === "complete") {
     return (
       <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur">
+        <header
+          className={cn(
+            "sticky top-0 z-10 border-b border-border/50",
+            reduceTransparency
+              ? "bg-background"
+              : "bg-background/95 backdrop-blur",
+          )}
+        >
           <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4">
             <Button variant="ghost" size="icon" asChild>
               <Link href="/" aria-label="Back to home">
@@ -126,7 +136,14 @@ export default function ReadingTestPage() {
           </div>
         </header>
         <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-2xl flex-col items-center justify-center px-4 py-12 text-center">
-          <div className="rounded-2xl border border-white/10 bg-black/30 px-8 py-12 shadow-xl">
+          <div
+            className={cn(
+              "rounded-2xl border px-8 py-12 shadow-xl",
+              reduceTransparency
+                ? "border-zinc-700 bg-zinc-900"
+                : "border-white/10 bg-black/30",
+            )}
+          >
             <Trophy className="mx-auto mb-6 size-16 text-amber-400" />
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               {achievedWpm !== null && achievedWpm > 0
@@ -157,7 +174,14 @@ export default function ReadingTestPage() {
   if (stage === "questions") {
     return (
       <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur">
+        <header
+          className={cn(
+            "sticky top-0 z-10 border-b border-border/50",
+            reduceTransparency
+              ? "bg-background"
+              : "bg-background/95 backdrop-blur",
+          )}
+        >
           <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4">
             <Button variant="ghost" size="icon" asChild>
               <Link href="/" aria-label="Back to home">
@@ -207,7 +231,14 @@ export default function ReadingTestPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur">
+      <header
+        className={cn(
+          "sticky top-0 z-10 border-b border-border/50",
+          reduceTransparency
+            ? "bg-background"
+            : "bg-background/95 backdrop-blur",
+        )}
+      >
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/" aria-label="Back to home">
@@ -241,9 +272,17 @@ interface ReadingTestReaderProps {
 }
 
 function ReadingTestReader({ text, wpm, onComplete }: ReadingTestReaderProps) {
+  const { reduceTransparency } = useReduceTransparency();
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-black/30 p-6">
+      <div
+        className={cn(
+          "rounded-2xl border p-6",
+          reduceTransparency
+            ? "border-zinc-700 bg-zinc-900"
+            : "border-white/10 bg-black/30",
+        )}
+      >
         <SpeedReader
           key={text}
           variant="test"

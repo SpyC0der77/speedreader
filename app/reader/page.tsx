@@ -5,10 +5,13 @@ import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "r
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, BookOpen, Gauge, Loader2, Settings } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { SpeedReader } from "@/components/speed-reader";
 import { Slider } from "@/components/ui/slider";
+import { useReduceMotion } from "@/lib/reduce-motion-context";
+import { useReduceTransparency } from "@/lib/reduce-transparency-context";
 import {
   attachTrailingCommasToLinks,
   extractTextFromHtml,
@@ -133,6 +136,8 @@ const DEFAULT_SENTENCE_END_MS = 500;
 const DEFAULT_SPEECH_BREAK_MS = 250;
 
 export default function ReaderPage() {
+  const { reduceMotion, setReduceMotion } = useReduceMotion();
+  const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
   const [url, setUrl] = useState("");
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [wrappedContent, setWrappedContent] = useState<string | null>(null);
@@ -154,34 +159,38 @@ export default function ReaderPage() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelHeight, setPanelHeight] = useState(420);
 
-  const scrollToWordInArticleArea = useCallback((span: HTMLElement) => {
-    const header = articleHeaderRef.current;
-    const panel = panelRef.current;
-    const scrollContainer = articleScrollContainerRef.current;
-    const headerRect = header?.getBoundingClientRect();
-    const panelRect = panel?.getBoundingClientRect();
-    const spanRect = span.getBoundingClientRect();
-    const spanCenter = spanRect.top + spanRect.height / 2;
+  const scrollToWordInArticleArea = useCallback(
+    (span: HTMLElement) => {
+      const header = articleHeaderRef.current;
+      const panel = panelRef.current;
+      const scrollContainer = articleScrollContainerRef.current;
+      const headerRect = header?.getBoundingClientRect();
+      const panelRect = panel?.getBoundingClientRect();
+      const spanRect = span.getBoundingClientRect();
+      const spanCenter = spanRect.top + spanRect.height / 2;
+      const scrollBehavior = reduceMotion ? "auto" : "smooth";
 
-    const isScrollable =
-      scrollContainer &&
-      getComputedStyle(scrollContainer).overflow !== "visible";
-    if (isScrollable && scrollContainer) {
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const visibleCenter =
-        containerRect.top + containerRect.height / 2;
-      const delta = spanCenter - visibleCenter;
-      scrollContainer.scrollBy({ top: delta, behavior: "smooth" });
-    } else if (headerRect && panelRect) {
-      const visibleTop = Math.max(headerRect.bottom, 0);
-      const visibleBottom = panelRect.top;
-      const visibleCenter = (visibleTop + visibleBottom) / 2;
-      const delta = spanCenter - visibleCenter;
-      window.scrollBy({ top: delta, behavior: "smooth" });
-    } else {
-      span.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [articleHeaderRef, panelRef, articleScrollContainerRef]);
+      const isScrollable =
+        scrollContainer &&
+        getComputedStyle(scrollContainer).overflow !== "visible";
+      if (isScrollable && scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const visibleCenter =
+          containerRect.top + containerRect.height / 2;
+        const delta = spanCenter - visibleCenter;
+        scrollContainer.scrollBy({ top: delta, behavior: scrollBehavior });
+      } else if (headerRect && panelRect) {
+        const visibleTop = Math.max(headerRect.bottom, 0);
+        const visibleBottom = panelRect.top;
+        const visibleCenter = (visibleTop + visibleBottom) / 2;
+        const delta = spanCenter - visibleCenter;
+        window.scrollBy({ top: delta, behavior: scrollBehavior });
+      } else {
+        span.scrollIntoView({ behavior: scrollBehavior, block: "center" });
+      }
+    },
+    [articleHeaderRef, panelRef, articleScrollContainerRef, reduceMotion],
+  );
 
   // Preprocess content so trailing commas after links are attached to the link text.
   const processedContent = useMemo(
@@ -281,7 +290,14 @@ export default function ReaderPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header
+          className={cn(
+            "sticky top-0 z-10 border-b border-border/50",
+            reduceTransparency
+              ? "bg-background"
+              : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+          )}
+        >
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/" aria-label="Back to home">
@@ -317,13 +333,15 @@ export default function ReaderPage() {
             <Dialog.Portal>
               <Dialog.Overlay
                 className={cn(
-                  "fixed inset-0 z-50 bg-black/80",
+                  "fixed inset-0 z-50",
+                  reduceTransparency ? "bg-black" : "bg-black/80",
                   "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
                 )}
               />
               <Dialog.Content
                 className={cn(
-                  "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/10 bg-zinc-900 p-6 shadow-xl",
+                  "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-zinc-900 p-6 shadow-xl",
+                  reduceTransparency ? "border-zinc-700" : "border-white/10",
                   "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
                 )}
               >
@@ -368,6 +386,32 @@ export default function ReaderPage() {
                       onValueChange={([v]) =>
                         setSpeechBreakDurationMs(v ?? DEFAULT_SPEECH_BREAK_MS)
                       }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label
+                      htmlFor="reduce-transparency"
+                      className="text-sm font-medium text-zinc-100"
+                    >
+                      Reduce transparency
+                    </label>
+                    <Switch
+                      id="reduce-transparency"
+                      checked={reduceTransparency}
+                      onCheckedChange={setReduceTransparency}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label
+                      htmlFor="reduce-motion"
+                      className="text-sm font-medium text-zinc-100"
+                    >
+                      Reduce motion
+                    </label>
+                    <Switch
+                      id="reduce-motion"
+                      checked={reduceMotion}
+                      onCheckedChange={setReduceMotion}
                     />
                   </div>
                 </div>
@@ -506,7 +550,8 @@ export default function ReaderPage() {
         <Dialog.Portal>
           <Dialog.Overlay
             className={cn(
-              "fixed inset-0 z-50 bg-black/90",
+              "fixed inset-0 z-50",
+              reduceTransparency ? "bg-black" : "bg-black/90",
               "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             )}
           />

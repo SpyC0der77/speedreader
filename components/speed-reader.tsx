@@ -7,7 +7,10 @@ import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { NumberInput } from "@/components/ui/number-input";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useReduceMotion } from "@/lib/reduce-motion-context";
+import { useReduceTransparency } from "@/lib/reduce-transparency-context";
 import {
   calculateReadingTimeMs,
   getWordParts,
@@ -73,6 +76,8 @@ type SpeedReaderProps =
   | SpeedReaderTestProps;
 
 export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
+  const { reduceMotion, setReduceMotion } = useReduceMotion();
+  const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
   const isFull = props.variant === "full";
   const isTest = props.variant === "test";
   const controlledWordIndex = props.controlledWordIndex;
@@ -249,7 +254,10 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
       >
         <div
           className={cn(
-            "relative mx-auto flex w-full max-w-4xl items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/80 sm:rounded-2xl dark:border-white/10 dark:bg-black/50",
+            "relative mx-auto flex w-full max-w-4xl items-center justify-center overflow-hidden rounded-xl border sm:rounded-2xl",
+            reduceTransparency
+              ? "border-border bg-muted dark:border-zinc-700 dark:bg-zinc-900"
+              : "border-border bg-muted/80 dark:border-white/10 dark:bg-black/50",
             isPanelFillHeight ? "min-h-48 flex-1" : "h-60",
           )}
         >
@@ -350,8 +358,11 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
       <div
         className={cn(
           "flex flex-col gap-4 bg-background px-4 py-4 sm:px-8",
+          !isPanelFillHeight && "border-t border-border",
           !isPanelFillHeight &&
-            "border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+            (reduceTransparency
+              ? "bg-background"
+              : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"),
           isPanelFillHeight && "min-h-0",
           className,
         )}
@@ -402,13 +413,15 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         <Dialog.Portal>
           <Dialog.Overlay
             className={cn(
-              "fixed inset-0 z-50 bg-black/80",
+              "fixed inset-0 z-50",
+              reduceTransparency ? "bg-black" : "bg-black/80",
               "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             )}
           />
           <Dialog.Content
             className={cn(
-              "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/10 bg-zinc-900 p-6 shadow-xl",
+              "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-zinc-900 p-6 shadow-xl",
+              reduceTransparency ? "border-zinc-700" : "border-white/10",
               "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             )}
           >
@@ -464,6 +477,32 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
                     ),
                   )}
                 </select>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <label
+                  htmlFor="reduce-transparency-speedreader"
+                  className="text-sm font-medium text-zinc-100"
+                >
+                  Reduce transparency
+                </label>
+                <Switch
+                  id="reduce-transparency-speedreader"
+                  checked={reduceTransparency}
+                  onCheckedChange={setReduceTransparency}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <label
+                  htmlFor="reduce-motion-speedreader"
+                  className="text-sm font-medium text-zinc-100"
+                >
+                  Reduce motion
+                </label>
+                <Switch
+                  id="reduce-motion-speedreader"
+                  checked={reduceMotion}
+                  onCheckedChange={setReduceMotion}
+                />
               </div>
             </div>
           </Dialog.Content>
