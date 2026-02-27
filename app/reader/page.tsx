@@ -254,7 +254,14 @@ export default function ReaderPage() {
               className="flex-1"
             />
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? <Loader2 className="size-5 animate-spin" /> : "Read"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  <span className="sr-only">Read</span>
+                </>
+              ) : (
+                "Read"
+              )}
             </Button>
           </form>
           <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
