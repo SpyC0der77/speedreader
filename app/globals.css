@@ -53,7 +53,7 @@ body {
 
 :root {
   --radius: 0.625rem;
-  /* Black theme (default): background = page */
+  /* Light theme: background = page */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -91,8 +91,8 @@ body {
 }
 
 .dark {
-  /* Black theme: background = page (dark) */
-  --background: oklch(0.145 0 0);
+  /* Gray theme: background = page (lighter), muted = speed reader (darker) */
+  --background: oklch(0.269 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -102,7 +102,7 @@ body {
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.145 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
@@ -126,12 +126,6 @@ body {
 
   scrollbar-width: thin;
   scrollbar-color: oklch(0.556 0 0 / 60%) oklch(0.269 0 0);
-}
-
-/* Gray theme: background = page (lighter), muted = speed reader (darker) */
-.dark [data-theme="gray"] {
-  --background: oklch(0.269 0 0);
-  --muted: oklch(0.145 0 0);
 }
 
 @layer base {
