@@ -12,7 +12,6 @@ import { SpeedReader } from "@/components/speed-reader";
 import { Slider } from "@/components/ui/slider";
 import { useReduceMotion } from "@/lib/reduce-motion-context";
 import { useReduceTransparency } from "@/lib/reduce-transparency-context";
-import { useTheme, type Theme } from "@/lib/theme-context";
 import {
   attachTrailingCommasToLinks,
   extractTextFromHtml,
@@ -137,7 +136,6 @@ const DEFAULT_SENTENCE_END_MS = 500;
 const DEFAULT_SPEECH_BREAK_MS = 250;
 
 export default function ReaderPage() {
-  const { theme, setTheme } = useTheme();
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
   const [url, setUrl] = useState("");
@@ -354,25 +352,6 @@ export default function ReaderPage() {
                   Adjust pause durations (values at 250 WPM; scale with speed).
                 </Dialog.Description>
                 <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="theme"
-                      className="mb-2 block text-sm font-medium text-zinc-100"
-                    >
-                      Theme
-                    </label>
-                    <select
-                      id="theme"
-                      value={theme}
-                      onChange={(e) =>
-                        setTheme(e.target.value as Theme)
-                      }
-                      className="w-full rounded-md border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
-                    >
-                      <option value="black">Black</option>
-                      <option value="gray">Gray</option>
-                    </select>
-                  </div>
                   <div>
                     <label
                       htmlFor="sentence-end"
