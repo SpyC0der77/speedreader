@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useReduceMotion } from "@/lib/reduce-motion-context";
 import { useReduceTransparency } from "@/lib/reduce-transparency-context";
+import { useTheme, type Theme } from "@/lib/theme-context";
 import {
   calculateReadingTimeMs,
   getWordParts,
@@ -76,6 +77,7 @@ type SpeedReaderProps =
   | SpeedReaderTestProps;
 
 export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
+  const { theme, setTheme } = useTheme();
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
   const isFull = props.variant === "full";
@@ -432,6 +434,25 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
               Customize the reading experience.
             </Dialog.Description>
             <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="theme-speedreader"
+                  className="mb-2 block text-sm font-medium text-zinc-100"
+                >
+                  Theme
+                </label>
+                <select
+                  id="theme-speedreader"
+                  value={theme}
+                  onChange={(e) =>
+                    setTheme(e.target.value as Theme)
+                  }
+                  className="w-full rounded-md border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
+                >
+                  <option value="black">Black</option>
+                  <option value="gray">Gray</option>
+                </select>
+              </div>
               <div>
                 <label
                   htmlFor="font-size"
