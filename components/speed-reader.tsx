@@ -256,8 +256,8 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
           className={cn(
             "relative mx-auto flex w-full max-w-4xl items-center justify-center overflow-hidden rounded-xl border sm:rounded-2xl",
             reduceTransparency
-              ? "border-border bg-muted dark:border-zinc-700 dark:bg-zinc-900"
-              : "border-border bg-muted/80 dark:border-white/10 dark:bg-black/50",
+              ? "border-border bg-muted dark:border-zinc-700"
+              : "border-border bg-muted/80 dark:border-white/10 dark:bg-muted/90",
             isPanelFillHeight ? "min-h-48 flex-1" : "h-60",
           )}
         >

@@ -140,8 +140,8 @@ export default function ReadingTestPage() {
             className={cn(
               "rounded-2xl border px-8 py-12 shadow-xl",
               reduceTransparency
-                ? "border-zinc-700 bg-zinc-900"
-                : "border-white/10 bg-black/30",
+                ? "border-zinc-700 bg-muted"
+                : "border-white/10 bg-muted/90",
             )}
           >
             <Trophy className="mx-auto mb-6 size-16 text-amber-400" />
@@ -279,8 +279,8 @@ function ReadingTestReader({ text, wpm, onComplete }: ReadingTestReaderProps) {
         className={cn(
           "rounded-2xl border p-6",
           reduceTransparency
-            ? "border-zinc-700 bg-zinc-900"
-            : "border-white/10 bg-black/30",
+            ? "border-zinc-700 bg-muted"
+            : "border-white/10 bg-muted/90",
         )}
       >
         <SpeedReader
