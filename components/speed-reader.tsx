@@ -393,12 +393,6 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         >
           Article Reader
         </Link>
-        <Link
-          href="/test"
-          className="ml-4 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          Reading Test
-        </Link>
         <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <Dialog.Trigger asChild>
             <Button
