@@ -29,7 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const SAMPLE_TEXT =
-  "Paste your own text below, press play, and read one focal point at a time.";
+  "Paste your own text below, focus on the red letter, press play, and let the words flow.";
 
 const SENTENCE_END_DELAY_MS_AT_250_WPM = 500;
 const PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM = 250;
@@ -85,7 +85,9 @@ type SpeedReaderProps =
   | SpeedReaderPanelProps
   | SpeedReaderTestProps;
 
-export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
+export function SpeedReader(
+  props: SpeedReaderProps,
+): React.ReactElement | null {
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
   const { theme, setTheme } = useTheme();
@@ -106,10 +108,12 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
-  const text =
-    isFull ? inputText : (props as SpeedReaderPanelProps | SpeedReaderTestProps).text;
+  const text = isFull
+    ? inputText
+    : (props as SpeedReaderPanelProps | SpeedReaderTestProps).text;
   const words = useMemo(() => parseWords(text), [text]);
-  const onWordIndexChange = "onWordIndexChange" in props ? props.onWordIndexChange : undefined;
+  const onWordIndexChange =
+    "onWordIndexChange" in props ? props.onWordIndexChange : undefined;
   const effectiveWordIndex =
     controlledWordIndex !== undefined ? controlledWordIndex : wordIndex;
   const activeWordIndex =
@@ -145,15 +149,13 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
   useEffect(() => {
     if (!isPlaying || words.length === 0) return;
 
-    const baseMsPerWord = Math.max(
-      30,
-      Math.round(60000 / wordsPerMinute),
-    );
+    const baseMsPerWord = Math.max(30, Math.round(60000 / wordsPerMinute));
     const wpmScale = 250 / wordsPerMinute;
     const sentenceEndMs =
       props.sentenceEndDurationMsAt250Wpm ?? SENTENCE_END_DELAY_MS_AT_250_WPM;
     const speechBreakMs =
-      props.speechBreakDurationMsAt250Wpm ?? PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM;
+      props.speechBreakDurationMsAt250Wpm ??
+      PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM;
     const sentenceDelay = Math.round(sentenceEndMs * wpmScale);
     const pauseDelay = Math.round(speechBreakMs * wpmScale);
 
@@ -199,7 +201,8 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
         words,
         wordsPerMinute,
         props.sentenceEndDurationMsAt250Wpm ?? SENTENCE_END_DELAY_MS_AT_250_WPM,
-        props.speechBreakDurationMsAt250Wpm ?? PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM,
+        props.speechBreakDurationMsAt250Wpm ??
+          PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM,
         activeWordIndex,
         words.length - 1,
       ),
@@ -247,11 +250,11 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
 
   const panelFontSize =
     props.variant === "panel"
-      ? (props as SpeedReaderPanelProps).fontSize ?? "md"
+      ? ((props as SpeedReaderPanelProps).fontSize ?? "md")
       : "md";
   const panelFontFamily =
     props.variant === "panel"
-      ? (props as SpeedReaderPanelProps).fontFamily ?? "serif"
+      ? ((props as SpeedReaderPanelProps).fontFamily ?? "serif")
       : "serif";
 
   const wordDisplayClassName = isFull
@@ -421,77 +424,80 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
               <Settings className="size-5" />
             </Button>
           </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay
-            className={cn(
-              "fixed inset-0 z-50",
-              reduceTransparency ? "bg-black" : "bg-black/80",
-              "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-            )}
-          />
-          <Dialog.Content
-            className={cn(
-              "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-zinc-900 p-6 shadow-xl",
-              reduceTransparency ? "border-zinc-700" : "border-white/10",
-              "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-            )}
-          >
-            <Dialog.Title className="mb-4 text-lg font-semibold text-zinc-100">
-              Settings
-            </Dialog.Title>
-            <Dialog.Description className="mb-4 text-sm text-muted-foreground">
-              Customize the reading experience.
-            </Dialog.Description>
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="theme-select"
-                  className="mb-2 block text-sm font-medium text-zinc-100"
-                >
-                  Theme
-                </label>
-                <Select value={theme} onValueChange={(v) => setTheme(v as Theme)}>
-                  <SelectTrigger id="theme-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(Object.keys(THEMES) as Theme[]).map((key) => (
-                      <SelectItem key={key} value={key}>
-                        {THEMES[key]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <Dialog.Portal>
+            <Dialog.Overlay
+              className={cn(
+                "fixed inset-0 z-50",
+                reduceTransparency ? "bg-black" : "bg-black/80",
+                "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+              )}
+            />
+            <Dialog.Content
+              className={cn(
+                "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-zinc-900 p-6 shadow-xl",
+                reduceTransparency ? "border-zinc-700" : "border-white/10",
+                "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+              )}
+            >
+              <Dialog.Title className="mb-4 text-lg font-semibold text-zinc-100">
+                Settings
+              </Dialog.Title>
+              <Dialog.Description className="mb-4 text-sm text-muted-foreground">
+                Customize the reading experience.
+              </Dialog.Description>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="theme-select"
+                    className="mb-2 block text-sm font-medium text-zinc-100"
+                  >
+                    Theme
+                  </label>
+                  <Select
+                    value={theme}
+                    onValueChange={(v) => setTheme(v as Theme)}
+                  >
+                    <SelectTrigger id="theme-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(THEMES) as Theme[]).map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {THEMES[key]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <label
+                    htmlFor="reduce-transparency-speedreader"
+                    className="text-sm font-medium text-zinc-100"
+                  >
+                    Reduce transparency
+                  </label>
+                  <Switch
+                    id="reduce-transparency-speedreader"
+                    checked={reduceTransparency}
+                    onCheckedChange={setReduceTransparency}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <label
+                    htmlFor="reduce-motion-speedreader"
+                    className="text-sm font-medium text-zinc-100"
+                  >
+                    Reduce motion
+                  </label>
+                  <Switch
+                    id="reduce-motion-speedreader"
+                    checked={reduceMotion}
+                    onCheckedChange={setReduceMotion}
+                  />
+                </div>
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <label
-                  htmlFor="reduce-transparency-speedreader"
-                  className="text-sm font-medium text-zinc-100"
-                >
-                  Reduce transparency
-                </label>
-                <Switch
-                  id="reduce-transparency-speedreader"
-                  checked={reduceTransparency}
-                  onCheckedChange={setReduceTransparency}
-                />
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <label
-                  htmlFor="reduce-motion-speedreader"
-                  className="text-sm font-medium text-zinc-100"
-                >
-                  Reduce motion
-                </label>
-                <Switch
-                  id="reduce-motion-speedreader"
-                  checked={reduceMotion}
-                  onCheckedChange={setReduceMotion}
-                />
-              </div>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
+            </Dialog.Content>
+          </Dialog.Portal>
         </Dialog.Root>
       </div>
       <div className="min-h-0 flex-1 shrink-0" aria-hidden />
