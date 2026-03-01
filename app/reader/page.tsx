@@ -9,10 +9,23 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, BookOpen, Gauge, Loader2, Settings } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { SpeedReader } from "@/components/speed-reader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useReduceMotion } from "@/lib/reduce-motion-context";
 import { useReduceTransparency } from "@/lib/reduce-transparency-context";
 import { useTheme, THEMES, type Theme } from "@/lib/theme-context";
+import {
+  FONT_FAMILIES,
+  FONT_SIZES,
+  type FontFamilyKey,
+  type FontSizeKey,
+} from "@/components/speed-reader";
 import {
   attachTrailingCommasToLinks,
   extractTextFromHtml,
@@ -153,6 +166,8 @@ export default function ReaderPage() {
   const [speechBreakDurationMs, setSpeechBreakDurationMs] = useState(
     DEFAULT_SPEECH_BREAK_MS,
   );
+  const [fontSize, setFontSize] = useState<FontSizeKey>("md");
+  const [fontFamily, setFontFamily] = useState<FontFamilyKey>("serif");
   const [showArticleOnMobile, setShowArticleOnMobile] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<MediaPreview | null>(null);
   const articleBodyRef = useRef<HTMLDivElement>(null);
@@ -361,18 +376,75 @@ export default function ReaderPage() {
                     >
                       Theme
                     </label>
-                    <select
-                      id="reader-theme-select"
+                    <Select
                       value={theme}
-                      onChange={(e) => setTheme(e.target.value as Theme)}
-                      className="w-full rounded-md border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
+                      onValueChange={(v) => setTheme(v as Theme)}
                     >
-                      {(Object.keys(THEMES) as Theme[]).map((key) => (
-                        <option key={key} value={key}>
-                          {THEMES[key]}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger id="reader-theme-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(THEMES) as Theme[]).map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {THEMES[key]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="reader-font-size"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Font size
+                    </label>
+                    <Select
+                      value={fontSize}
+                      onValueChange={(v) =>
+                        setFontSize(v as FontSizeKey)
+                      }
+                    >
+                      <SelectTrigger id="reader-font-size">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(FONT_SIZES) as FontSizeKey[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              {FONT_SIZES[key].label}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="reader-font-family"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Font family
+                    </label>
+                    <Select
+                      value={fontFamily}
+                      onValueChange={(v) =>
+                        setFontFamily(v as FontFamilyKey)
+                      }
+                    >
+                      <SelectTrigger id="reader-font-family">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(FONT_FAMILIES) as FontFamilyKey[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              {FONT_FAMILIES[key].label}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label
@@ -535,6 +607,8 @@ export default function ReaderPage() {
                     controlledWordIndex={wordIndex}
                     sentenceEndDurationMsAt250Wpm={sentenceEndDurationMs}
                     speechBreakDurationMsAt250Wpm={speechBreakDurationMs}
+                    fontSize={fontSize}
+                    fontFamily={fontFamily}
                     fillHeight
                     className="flex-1 min-h-0 justify-center border-0"
                   />
@@ -564,6 +638,8 @@ export default function ReaderPage() {
             controlledWordIndex={wordIndex}
             sentenceEndDurationMsAt250Wpm={sentenceEndDurationMs}
             speechBreakDurationMsAt250Wpm={speechBreakDurationMs}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
           />
         </div>
       )}

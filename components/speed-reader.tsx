@@ -6,6 +6,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { NumberInput } from "@/components/ui/number-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,22 +34,6 @@ const SAMPLE_TEXT =
 const SENTENCE_END_DELAY_MS_AT_250_WPM = 500;
 const PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM = 250;
 
-const FONT_SIZES = {
-  sm: { label: "Small", className: "text-4xl sm:text-5xl" },
-  md: { label: "Medium", className: "text-5xl sm:text-6xl" },
-  lg: { label: "Large", className: "text-6xl sm:text-7xl" },
-  xl: { label: "Extra large", className: "text-7xl sm:text-8xl" },
-} as const;
-
-const FONT_FAMILIES = {
-  sans: { label: "Sans", className: "font-sans" },
-  serif: { label: "Serif (Recommended)", className: "font-serif" },
-  mono: { label: "Mono", className: "font-mono" },
-} as const;
-
-type FontSizeKey = keyof typeof FONT_SIZES;
-type FontFamilyKey = keyof typeof FONT_FAMILIES;
-
 interface SpeedReaderBaseProps {
   wordsPerMinute?: number;
   onWordIndexChange?: (index: number) => void;
@@ -57,12 +48,30 @@ interface SpeedReaderFullProps extends SpeedReaderBaseProps {
   variant: "full";
 }
 
+export const FONT_SIZES = {
+  sm: { label: "Small", className: "text-4xl sm:text-5xl" },
+  md: { label: "Medium", className: "text-5xl sm:text-6xl" },
+  lg: { label: "Large", className: "text-6xl sm:text-7xl" },
+  xl: { label: "Extra large", className: "text-7xl sm:text-8xl" },
+} as const;
+
+export const FONT_FAMILIES = {
+  sans: { label: "Sans", className: "font-sans" },
+  serif: { label: "Serif (Recommended)", className: "font-serif" },
+  mono: { label: "Mono", className: "font-mono" },
+} as const;
+
+export type FontSizeKey = keyof typeof FONT_SIZES;
+export type FontFamilyKey = keyof typeof FONT_FAMILIES;
+
 interface SpeedReaderPanelProps extends SpeedReaderBaseProps {
   variant: "panel";
   text: string;
   className?: string;
   /** When true, the word display area grows to fill available space (e.g. mobile full-screen) */
   fillHeight?: boolean;
+  fontSize?: FontSizeKey;
+  fontFamily?: FontFamilyKey;
 }
 
 interface SpeedReaderTestProps extends SpeedReaderBaseProps {
@@ -95,8 +104,6 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [fontSize, setFontSize] = useState<FontSizeKey>("md");
-  const [fontFamily, setFontFamily] = useState<FontFamilyKey>("serif");
   const timeoutRef = useRef<number | null>(null);
 
   const text =
@@ -238,11 +245,21 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
   const isPanelFillHeight =
     props.variant === "panel" && (props as SpeedReaderPanelProps).fillHeight;
 
+  const panelFontSize =
+    props.variant === "panel"
+      ? (props as SpeedReaderPanelProps).fontSize ?? "md"
+      : "md";
+  const panelFontFamily =
+    props.variant === "panel"
+      ? (props as SpeedReaderPanelProps).fontFamily ?? "serif"
+      : "serif";
+
   const wordDisplayClassName = isFull
-    ? cn(FONT_SIZES[fontSize].className, FONT_FAMILIES[fontFamily].className)
-    : isPanelFillHeight
-      ? "text-4xl font-serif sm:text-5xl md:text-6xl"
-      : "text-5xl font-serif sm:text-6xl";
+    ? cn(FONT_SIZES.md.className, FONT_FAMILIES.serif.className)
+    : cn(
+        FONT_SIZES[panelFontSize].className,
+        FONT_FAMILIES[panelFontFamily].className,
+      );
 
   const content = (
     <>
@@ -433,64 +450,18 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
                 >
                   Theme
                 </label>
-                <select
-                  id="theme-select"
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value as Theme)}
-                  className="w-full rounded-md border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
-                >
-                  {(Object.keys(THEMES) as Theme[]).map((key) => (
-                    <option key={key} value={key}>
-                      {THEMES[key]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="font-size"
-                  className="mb-2 block text-sm font-medium text-zinc-100"
-                >
-                  Font size
-                </label>
-                <select
-                  id="font-size"
-                  value={fontSize}
-                  onChange={(e) =>
-                    setFontSize(e.target.value as FontSizeKey)
-                  }
-                  className="w-full rounded-md border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
-                >
-                  {(Object.keys(FONT_SIZES) as FontSizeKey[]).map((key) => (
-                    <option key={key} value={key}>
-                      {FONT_SIZES[key].label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="font-family"
-                  className="mb-2 block text-sm font-medium text-zinc-100"
-                >
-                  Font family
-                </label>
-                <select
-                  id="font-family"
-                  value={fontFamily}
-                  onChange={(e) =>
-                    setFontFamily(e.target.value as FontFamilyKey)
-                  }
-                  className="w-full rounded-md border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
-                >
-                  {(Object.keys(FONT_FAMILIES) as FontFamilyKey[]).map(
-                    (key) => (
-                      <option key={key} value={key}>
-                        {FONT_FAMILIES[key].label}
-                      </option>
-                    ),
-                  )}
-                </select>
+                <Select value={theme} onValueChange={(v) => setTheme(v as Theme)}>
+                  <SelectTrigger id="theme-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(THEMES) as Theme[]).map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {THEMES[key]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <label
