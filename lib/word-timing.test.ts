@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  calculateReadingTimeMs,
   wordEndsSentence,
   wordHasPausePunctuation,
 } from "./word-timing";
@@ -112,5 +113,114 @@ describe("wordHasPausePunctuation", () => {
     expect(wordHasPausePunctuation(",")).toBe(true);
     expect(wordHasPausePunctuation("—")).toBe(true);
     expect(wordHasPausePunctuation("--")).toBe(true);
+  });
+});
+
+describe("calculateReadingTimeMs", () => {
+  const words = ["Hello,", "world.", "How", "are", "you?"];
+  const sentenceEndMs = 500;
+  const speechBreakMs = 250;
+
+  it("returns 0 for empty words array", () => {
+    expect(
+      calculateReadingTimeMs([], 300, sentenceEndMs, speechBreakMs)
+    ).toBe(0);
+  });
+
+  it("clamps toIndex to valid bounds when out of range", () => {
+    const valid = calculateReadingTimeMs(
+      words,
+      300,
+      sentenceEndMs,
+      speechBreakMs,
+      0,
+      words.length - 1
+    );
+    const outOfRange = calculateReadingTimeMs(
+      words,
+      300,
+      sentenceEndMs,
+      speechBreakMs,
+      0,
+      999
+    );
+    expect(outOfRange).toBe(valid);
+  });
+
+  it("clamps negative toIndex to 0", () => {
+    const fromZero = calculateReadingTimeMs(
+      words,
+      300,
+      sentenceEndMs,
+      speechBreakMs,
+      0,
+      0
+    );
+    const negativeToIndex = calculateReadingTimeMs(
+      words,
+      300,
+      sentenceEndMs,
+      speechBreakMs,
+      0,
+      -5
+    );
+    expect(negativeToIndex).toBe(fromZero);
+  });
+
+  it("uses minimum WPM of 1 when WPM is zero", () => {
+    const result = calculateReadingTimeMs(
+      words,
+      0,
+      sentenceEndMs,
+      speechBreakMs
+    );
+    expect(result).toBeGreaterThan(0);
+    expect(Number.isFinite(result)).toBe(true);
+  });
+
+  it("uses minimum WPM of 1 when WPM is negative", () => {
+    const result = calculateReadingTimeMs(
+      words,
+      -100,
+      sentenceEndMs,
+      speechBreakMs
+    );
+    expect(result).toBeGreaterThan(0);
+    expect(Number.isFinite(result)).toBe(true);
+  });
+
+  it("uses minimum WPM of 1 when WPM is NaN", () => {
+    const result = calculateReadingTimeMs(
+      words,
+      Number.NaN,
+      sentenceEndMs,
+      speechBreakMs
+    );
+    expect(result).toBeGreaterThan(0);
+    expect(Number.isFinite(result)).toBe(true);
+  });
+
+  it("handles very high WPM without producing invalid timings", () => {
+    const result = calculateReadingTimeMs(
+      words,
+      10000,
+      sentenceEndMs,
+      speechBreakMs
+    );
+    expect(result).toBeGreaterThan(0);
+    expect(Number.isFinite(result)).toBe(true);
+  });
+
+  it("computes positive time for valid inputs", () => {
+    const result = calculateReadingTimeMs(
+      words,
+      300,
+      sentenceEndMs,
+      speechBreakMs,
+      0,
+      2
+    );
+    expect(result).toBeGreaterThan(0);
+    expect(Number.isFinite(result)).toBe(true);
   });
 });

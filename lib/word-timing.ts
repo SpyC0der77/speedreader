@@ -20,11 +20,17 @@ export function calculateReadingTimeMs(
   toIndex?: number,
 ): number {
   if (words.length === 0) return 0;
-  const end = toIndex ?? words.length - 1;
+
+  const maxIndex = words.length - 1;
+  const rawEnd = toIndex ?? maxIndex;
+  const end = Math.max(0, Math.min(rawEnd, maxIndex));
   const start = Math.max(0, Math.min(fromIndex, end));
 
-  const baseMsPerWord = Math.max(30, Math.round(60000 / wordsPerMinute));
-  const wpmScale = 250 / wordsPerMinute;
+  const safeWpm = Number.isFinite(wordsPerMinute) && wordsPerMinute > 0
+    ? wordsPerMinute
+    : 1;
+  const baseMsPerWord = Math.max(30, Math.round(60000 / safeWpm));
+  const wpmScale = 250 / safeWpm;
   const sentenceDelay = Math.round(sentenceEndDurationMsAt250Wpm * wpmScale);
   const pauseDelay = Math.round(speechBreakDurationMsAt250Wpm * wpmScale);
 
