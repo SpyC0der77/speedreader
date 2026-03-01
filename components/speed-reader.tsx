@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useReduceMotion } from "@/lib/reduce-motion-context";
 import { useReduceTransparency } from "@/lib/reduce-transparency-context";
+import { useTheme, THEMES, type Theme } from "@/lib/theme-context";
 import {
   calculateReadingTimeMs,
   getWordParts,
@@ -78,6 +79,7 @@ type SpeedReaderProps =
 export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null {
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
+  const { theme, setTheme } = useTheme();
   const isFull = props.variant === "full";
   const isTest = props.variant === "test";
   const controlledWordIndex = props.controlledWordIndex;
@@ -206,9 +208,7 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
   const readingTimeLabel =
     remainingReadingTimeMs >= 60000
       ? `~${Math.round(remainingReadingTimeMs / 60000)} min`
-      : remainingReadingTimeMs >= 1000
-        ? `~${Math.round(remainingReadingTimeMs / 1000)} sec`
-        : null;
+      : `~${Math.round(remainingReadingTimeMs / 1000)} sec`;
 
   useEffect(() => {
     if (isFinished && props.onComplete && !hasCalledCompleteRef.current) {
@@ -432,6 +432,26 @@ export function SpeedReader(props: SpeedReaderProps): React.ReactElement | null 
               Customize the reading experience.
             </Dialog.Description>
             <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="theme-select"
+                  className="mb-2 block text-sm font-medium text-zinc-100"
+                >
+                  Theme
+                </label>
+                <select
+                  id="theme-select"
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value as Theme)}
+                  className="w-full rounded-md border border-white/10 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/20"
+                >
+                  {(Object.keys(THEMES) as Theme[]).map((key) => (
+                    <option key={key} value={key}>
+                      {THEMES[key]}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label
                   htmlFor="font-size"
