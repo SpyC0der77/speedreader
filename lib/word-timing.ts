@@ -22,9 +22,14 @@ export function calculateReadingTimeMs(
   if (words.length === 0) return 0;
 
   const maxIndex = words.length - 1;
-  const rawEnd = toIndex ?? maxIndex;
+  const intFromIndex = Number.isFinite(fromIndex) ? Math.floor(fromIndex) : 0;
+  const intToIndex =
+    toIndex !== undefined && Number.isFinite(toIndex)
+      ? Math.floor(toIndex)
+      : undefined;
+  const rawEnd = intToIndex ?? maxIndex;
   const end = Math.max(0, Math.min(rawEnd, maxIndex));
-  const start = Math.max(0, Math.min(fromIndex, end));
+  const start = Math.max(0, Math.min(intFromIndex, end));
 
   const safeWpm = Number.isFinite(wordsPerMinute) && wordsPerMinute > 0
     ? wordsPerMinute
