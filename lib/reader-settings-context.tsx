@@ -17,6 +17,9 @@ const STORAGE_KEY = "speedreader-reader-settings";
 
 const DEFAULT_SENTENCE_END_MS = 500;
 const DEFAULT_SPEECH_BREAK_MS = 250;
+const DEFAULT_WORDS_PER_MINUTE = 300;
+const WPM_MIN = 50;
+const WPM_MAX = 1200;
 
 interface StoredSettings {
   fontSize: FontSizeKey;
@@ -24,6 +27,7 @@ interface StoredSettings {
   focalColor: FocalColorKey;
   sentenceEndDurationMs: number;
   speechBreakDurationMs: number;
+  wordsPerMinute: number;
 }
 
 const DEFAULTS: StoredSettings = {
@@ -32,6 +36,7 @@ const DEFAULTS: StoredSettings = {
   focalColor: "rose",
   sentenceEndDurationMs: DEFAULT_SENTENCE_END_MS,
   speechBreakDurationMs: DEFAULT_SPEECH_BREAK_MS,
+  wordsPerMinute: DEFAULT_WORDS_PER_MINUTE,
 };
 
 function loadStored(): StoredSettings {
@@ -66,6 +71,12 @@ function loadStored(): StoredSettings {
         parsed.speechBreakDurationMs <= 1000
           ? parsed.speechBreakDurationMs
           : DEFAULTS.speechBreakDurationMs,
+      wordsPerMinute:
+        typeof parsed.wordsPerMinute === "number" &&
+        parsed.wordsPerMinute >= WPM_MIN &&
+        parsed.wordsPerMinute <= WPM_MAX
+          ? parsed.wordsPerMinute
+          : DEFAULTS.wordsPerMinute,
     };
   } catch {
     return DEFAULTS;
@@ -86,6 +97,7 @@ interface ReaderSettingsContextValue extends StoredSettings {
   setFocalColor: (v: FocalColorKey) => void;
   setSentenceEndDurationMs: (v: number) => void;
   setSpeechBreakDurationMs: (v: number) => void;
+  setWordsPerMinute: (v: number) => void;
 }
 
 const ReaderSettingsContext = createContext<ReaderSettingsContextValue | null>(
@@ -140,6 +152,17 @@ export function ReaderSettingsProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
+  const setWordsPerMinute = useCallback((wordsPerMinute: number) => {
+    setSettings((s) => {
+      const clamped = Math.round(
+        Math.max(WPM_MIN, Math.min(WPM_MAX, wordsPerMinute)),
+      );
+      const next = { ...s, wordsPerMinute: clamped };
+      saveStored(next);
+      return next;
+    });
+  }, []);
+
   const value: ReaderSettingsContextValue = {
     ...settings,
     setFontSize,
@@ -147,6 +170,7 @@ export function ReaderSettingsProvider({ children }: { children: React.ReactNode
     setFocalColor,
     setSentenceEndDurationMs,
     setSpeechBreakDurationMs,
+    setWordsPerMinute,
   };
 
   return (
@@ -166,6 +190,7 @@ export function useReaderSettings() {
       setFocalColor: () => {},
       setSentenceEndDurationMs: () => {},
       setSpeechBreakDurationMs: () => {},
+      setWordsPerMinute: () => {},
     };
   }
   return ctx;

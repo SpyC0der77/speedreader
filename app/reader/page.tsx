@@ -190,7 +190,6 @@ interface ArticleData {
 const READING_POSITION_KEY = "speedreader-reading-position";
 const PREVIOUS_ARTICLES_KEY = "speedreader-previous-articles";
 const PREVIOUS_ARTICLES_MAX = 15;
-const DEFAULT_WPM = 300;
 
 interface PreviousArticle {
   url: string;
@@ -209,6 +208,7 @@ export default function ReaderPage() {
     focalColor,
     sentenceEndDurationMs,
     speechBreakDurationMs,
+    wordsPerMinute,
     setFontSize,
     setFontFamily,
     setFocalColor,
@@ -487,13 +487,13 @@ export default function ReaderPage() {
     const words = parseWords(articleText);
     return calculateReadingTimeMs(
       words,
-      DEFAULT_WPM,
+      wordsPerMinute,
       sentenceEndDurationMs,
       speechBreakDurationMs,
       0,
       words.length - 1,
     );
-  }, [articleText, sentenceEndDurationMs, speechBreakDurationMs]);
+  }, [articleText, wordsPerMinute, sentenceEndDurationMs, speechBreakDurationMs]);
 
   const readingTimeLabel =
     readingTimeMs >= 60000

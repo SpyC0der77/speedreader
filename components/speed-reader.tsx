@@ -137,9 +137,12 @@ export function SpeedReader(
       : (props as SpeedReaderPanelProps | SpeedReaderTestProps).text,
   );
   const [wordIndex, setWordIndex] = useState(() => controlledWordIndex ?? 0);
-  const [wordsPerMinute, setWordsPerMinute] = useState(
-    props.wordsPerMinute ?? 300,
-  );
+  const wordsPerMinute =
+    props.wordsPerMinute ?? readerSettings.wordsPerMinute;
+  const setWordsPerMinute =
+    props.wordsPerMinute !== undefined
+      ? () => {}
+      : readerSettings.setWordsPerMinute;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fontSize = isFull
