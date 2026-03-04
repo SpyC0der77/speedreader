@@ -16,12 +16,15 @@ export function ReduceTransparencyProvider({ children }: { children: React.React
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      setReduceTransparencyState(stored === "true");
-    } catch {
-      // Ignore localStorage errors
-    }
+    const id = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        setReduceTransparencyState(stored === "true");
+      } catch {
+        // Ignore localStorage errors
+      }
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
 
   const setReduceTransparency = useCallback((value: boolean) => {

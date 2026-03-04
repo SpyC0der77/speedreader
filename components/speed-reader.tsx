@@ -2,7 +2,7 @@
 
 import { Settings } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { NumberInput } from "@/components/ui/number-input";
@@ -143,13 +143,16 @@ export function SpeedReader(
   );
   const mountedRef = useRef(false);
 
-  function setEffectiveWordIndex(index: number) {
-    if (controlledWordIndex !== undefined) {
-      onWordIndexChange?.(index);
-    } else {
-      setWordIndex(index);
-    }
-  }
+  const setEffectiveWordIndex = useCallback(
+    (index: number) => {
+      if (controlledWordIndex !== undefined) {
+        onWordIndexChange?.(index);
+      } else {
+        setWordIndex(index);
+      }
+    },
+    [controlledWordIndex, onWordIndexChange],
+  );
 
   useEffect(() => {
     mountedRef.current = true;
@@ -204,6 +207,7 @@ export function SpeedReader(
     words,
     effectiveSentenceEndMs,
     effectiveSpeechBreakMs,
+    setEffectiveWordIndex,
   ]);
 
   const isFinished =
@@ -234,12 +238,13 @@ export function SpeedReader(
       ? `~${Math.round(remainingReadingTimeMs / 60000)} min`
       : `~${Math.round(remainingReadingTimeMs / 1000)} sec`;
 
+  const onComplete = "onComplete" in props ? props.onComplete : undefined;
   useEffect(() => {
-    if (isFinished && props.onComplete && !hasCalledCompleteRef.current) {
+    if (isFinished && onComplete && !hasCalledCompleteRef.current) {
       hasCalledCompleteRef.current = true;
-      props.onComplete();
+      onComplete();
     }
-  }, [isFinished, props.onComplete]);
+  }, [isFinished, onComplete]);
 
   function handlePlayPauseRestart() {
     if (words.length === 0) return;

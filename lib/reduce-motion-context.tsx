@@ -16,12 +16,15 @@ export function ReduceMotionProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      setReduceMotionState(stored === "true");
-    } catch {
-      // Ignore localStorage errors
-    }
+    const id = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        setReduceMotionState(stored === "true");
+      } catch {
+        // Ignore localStorage errors
+      }
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {

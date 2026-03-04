@@ -18,16 +18,6 @@ function isValidTheme(value: unknown): value is Theme {
   return typeof value === "string" && VALID_THEMES.includes(value as Theme);
 }
 
-function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return DEFAULT_THEME;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return isValidTheme(stored) ? stored : DEFAULT_THEME;
-  } catch {
-    return DEFAULT_THEME;
-  }
-}
-
 function applyTheme(theme: Theme) {
   document.documentElement.setAttribute("data-theme", theme);
   if (theme === "system") {

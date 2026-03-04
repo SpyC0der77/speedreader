@@ -887,6 +887,7 @@ export default function ReaderPage() {
             )}
           >
             {mediaPreview?.type === "image" && (
+              // eslint-disable-next-line @next/next/no-img-element -- dynamic external URLs from article content
               <img
                 src={mediaPreview.src}
                 alt="Preview"
