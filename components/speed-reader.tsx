@@ -13,9 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Kbd } from "@/components/ui/kbd";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useReaderSettings } from "@/lib/reader-settings-context";
 import { useReduceMotion } from "@/lib/reduce-motion-context";
 import { useReduceTransparency } from "@/lib/reduce-transparency-context";
 import { useTheme, THEMES, type Theme } from "@/lib/theme-context";
@@ -93,6 +95,7 @@ export function SpeedReader(
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
   const { theme, setTheme } = useTheme();
+  const readerSettings = useReaderSettings();
   const isFull = props.variant === "full";
   const isTest = props.variant === "test";
   const controlledWordIndex = props.controlledWordIndex;
@@ -108,14 +111,14 @@ export function SpeedReader(
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [fontSize, setFontSize] = useState<FontSizeKey>("md");
-  const [fontFamily, setFontFamily] = useState<FontFamilyKey>("serif");
-  const [sentenceEndDurationMs, setSentenceEndDurationMs] = useState(
-    DEFAULT_SENTENCE_END_MS,
-  );
-  const [speechBreakDurationMs, setSpeechBreakDurationMs] = useState(
-    DEFAULT_SPEECH_BREAK_MS,
-  );
+  const fontSize = isFull ? readerSettings.fontSize : (props as SpeedReaderPanelProps).fontSize ?? "md";
+  const fontFamily = isFull ? readerSettings.fontFamily : (props as SpeedReaderPanelProps).fontFamily ?? "serif";
+  const sentenceEndDurationMs = isFull ? readerSettings.sentenceEndDurationMs : (props as SpeedReaderPanelProps).sentenceEndDurationMsAt250Wpm ?? DEFAULT_SENTENCE_END_MS;
+  const speechBreakDurationMs = isFull ? readerSettings.speechBreakDurationMs : (props as SpeedReaderPanelProps).speechBreakDurationMsAt250Wpm ?? DEFAULT_SPEECH_BREAK_MS;
+  const setFontSize = readerSettings.setFontSize;
+  const setFontFamily = readerSettings.setFontFamily;
+  const setSentenceEndDurationMs = readerSettings.setSentenceEndDurationMs;
+  const setSpeechBreakDurationMs = readerSettings.setSpeechBreakDurationMs;
   const timeoutRef = useRef<number | null>(null);
 
   const effectiveSentenceEndMs =
@@ -294,6 +297,18 @@ export function SpeedReader(
       if (e.code === "ArrowRight") {
         e.preventDefault();
         setIndex(Math.min(len - 1, idx + 1));
+        setIsPlaying(false);
+        return;
+      }
+      if (e.code === "Home") {
+        e.preventDefault();
+        setIndex(0);
+        setIsPlaying(false);
+        return;
+      }
+      if (e.code === "End") {
+        e.preventDefault();
+        setIndex(len - 1);
         setIsPlaying(false);
       }
     }
@@ -639,9 +654,11 @@ export function SpeedReader(
                     onCheckedChange={setReduceMotion}
                   />
                 </div>
-                <p className="pt-2 text-xs text-muted-foreground">
-                  Keyboard: Space to play/pause, ← → to skip words
-                </p>
+                <ul className="pt-2 text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                  <li><Kbd>Space</Kbd> — play/pause</li>
+                  <li><Kbd>←</Kbd> <Kbd>→</Kbd> — skip words</li>
+                  <li><Kbd>Home</Kbd> <Kbd>End</Kbd> — jump to start/end</li>
+                </ul>
               </div>
             </Dialog.Content>
           </Dialog.Portal>

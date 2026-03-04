@@ -1,5 +1,6 @@
 "use client";
 
+import { ReaderSettingsProvider } from "@/lib/reader-settings-context";
 import { ReduceMotionProvider } from "@/lib/reduce-motion-context";
 import { ReduceTransparencyProvider } from "@/lib/reduce-transparency-context";
 import { ThemeProvider } from "@/lib/theme-context";
@@ -10,7 +11,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider>
       <TooltipProvider>
         <ReduceTransparencyProvider>
-          <ReduceMotionProvider>{children}</ReduceMotionProvider>
+          <ReduceMotionProvider>
+          <ReaderSettingsProvider>{children}</ReaderSettingsProvider>
+        </ReduceMotionProvider>
         </ReduceTransparencyProvider>
       </TooltipProvider>
     </ThemeProvider>

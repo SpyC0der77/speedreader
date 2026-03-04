@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, BookOpen, Gauge, Loader2, Settings } from "lucide-react";
+import { ArrowLeft, BookOpen, Gauge, Link2, Loader2, Settings } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { SpeedReader } from "@/components/speed-reader";
 import {
@@ -17,7 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Kbd } from "@/components/ui/kbd";
 import { Slider } from "@/components/ui/slider";
+import { useReaderSettings } from "@/lib/reader-settings-context";
 import { useReduceMotion } from "@/lib/reduce-motion-context";
 import { useReduceTransparency } from "@/lib/reduce-transparency-context";
 import { useTheme, THEMES, type Theme } from "@/lib/theme-context";
@@ -29,7 +31,9 @@ import {
 } from "@/components/speed-reader";
 import {
   attachTrailingCommasToLinks,
+  calculateReadingTimeMs,
   extractTextFromHtml,
+  parseWords,
   wrapWordsInHtml,
 } from "@/lib/speed-reader";
 import { cn } from "@/lib/utils";
@@ -147,14 +151,25 @@ interface ArticleData {
   siteName: string | null;
 }
 
-const DEFAULT_SENTENCE_END_MS = 500;
-const DEFAULT_SPEECH_BREAK_MS = 250;
+const READING_POSITION_KEY = "speedreader-reading-position";
+const DEFAULT_WPM = 300;
 
 export default function ReaderPage() {
   const searchParams = useSearchParams();
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const { reduceTransparency, setReduceTransparency } = useReduceTransparency();
   const { theme, setTheme } = useTheme();
+  const readerSettings = useReaderSettings();
+  const {
+    fontSize,
+    fontFamily,
+    sentenceEndDurationMs,
+    speechBreakDurationMs,
+    setFontSize,
+    setFontFamily,
+    setSentenceEndDurationMs,
+    setSpeechBreakDurationMs,
+  } = readerSettings;
   const [url, setUrl] = useState("");
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [wrappedContent, setWrappedContent] = useState<string | null>(null);
@@ -162,15 +177,8 @@ export default function ReaderPage() {
   const [error, setError] = useState<string | null>(null);
   const [wordIndex, setWordIndex] = useState(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [sentenceEndDurationMs, setSentenceEndDurationMs] = useState(
-    DEFAULT_SENTENCE_END_MS,
-  );
-  const [speechBreakDurationMs, setSpeechBreakDurationMs] = useState(
-    DEFAULT_SPEECH_BREAK_MS,
-  );
-  const [fontSize, setFontSize] = useState<FontSizeKey>("md");
-  const [fontFamily, setFontFamily] = useState<FontFamilyKey>("serif");
   const [showArticleOnMobile, setShowArticleOnMobile] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<MediaPreview | null>(null);
   const articleBodyRef = useRef<HTMLDivElement>(null);
   const articleHeaderRef = useRef<HTMLElement>(null);
@@ -229,9 +237,42 @@ export default function ReaderPage() {
       return;
     }
     setWrappedContent(wrapWordsInHtml(processedContent));
-    setWordIndex(0);
     setShowArticleOnMobile(false);
-  }, [processedContent]);
+    const words = parseWords(extractTextFromHtml(processedContent));
+    const wordCount = words.length;
+    if (wordCount === 0) {
+      setWordIndex(0);
+      return;
+    }
+    try {
+      const stored = localStorage.getItem(READING_POSITION_KEY);
+      if (stored && url) {
+        const { url: storedUrl, wordIndex: storedIndex } = JSON.parse(stored) as {
+          url?: string;
+          wordIndex?: number;
+        };
+        if (storedUrl === url && typeof storedIndex === "number") {
+          setWordIndex(Math.min(Math.max(0, storedIndex), wordCount - 1));
+          return;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    setWordIndex(0);
+  }, [processedContent, url]);
+
+  useEffect(() => {
+    if (!article || !url) return;
+    try {
+      localStorage.setItem(
+        READING_POSITION_KEY,
+        JSON.stringify({ url, wordIndex }),
+      );
+    } catch {
+      // Ignore
+    }
+  }, [article, url, wordIndex]);
 
   function handleWordClick(index: number) {
     setWordIndex(index);
@@ -320,6 +361,36 @@ export default function ReaderPage() {
     loadArticle(url);
   }
 
+  async function handleCopyLink() {
+    if (!article || !url) return;
+    const shareUrl = `${window.location.origin}/reader?url=${encodeURIComponent(url)}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      // Ignore
+    }
+  }
+
+  const readingTimeMs = useMemo(() => {
+    if (!articleText) return 0;
+    const words = parseWords(articleText);
+    return calculateReadingTimeMs(
+      words,
+      DEFAULT_WPM,
+      sentenceEndDurationMs,
+      speechBreakDurationMs,
+      0,
+      words.length - 1,
+    );
+  }, [articleText, sentenceEndDurationMs, speechBreakDurationMs]);
+
+  const readingTimeLabel =
+    readingTimeMs >= 60000
+      ? `~${Math.round(readingTimeMs / 60000)} min read`
+      : `~${Math.round(readingTimeMs / 1000)} sec read`;
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header
@@ -356,6 +427,19 @@ export default function ReaderPage() {
               )}
             </Button>
           </form>
+          {article && url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyLink}
+              aria-label={copiedLink ? "Copied" : "Copy shareable link"}
+              title="Copy shareable link"
+              className="gap-1.5"
+            >
+              <Link2 className="size-5 shrink-0" />
+              {copiedLink && <span className="text-xs">Copied</span>}
+            </Button>
+          )}
           <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <Dialog.Trigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open settings">
@@ -475,7 +559,7 @@ export default function ReaderPage() {
                       step={50}
                       value={[sentenceEndDurationMs]}
                       onValueChange={([v]) =>
-                        setSentenceEndDurationMs(v ?? DEFAULT_SENTENCE_END_MS)
+                        setSentenceEndDurationMs(v ?? 500)
                       }
                     />
                   </div>
@@ -493,7 +577,7 @@ export default function ReaderPage() {
                       step={25}
                       value={[speechBreakDurationMs]}
                       onValueChange={([v]) =>
-                        setSpeechBreakDurationMs(v ?? DEFAULT_SPEECH_BREAK_MS)
+                        setSpeechBreakDurationMs(v ?? 250)
                       }
                     />
                   </div>
@@ -523,9 +607,11 @@ export default function ReaderPage() {
                       onCheckedChange={setReduceMotion}
                     />
                   </div>
-                  <p className="pt-2 text-xs text-muted-foreground">
-                    Keyboard: Space to play/pause, ← → to skip words
-                  </p>
+                  <ul className="pt-2 text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                    <li><Kbd>Space</Kbd> — play/pause</li>
+                    <li><Kbd>←</Kbd> <Kbd>→</Kbd> — skip words</li>
+                    <li><Kbd>Home</Kbd> <Kbd>End</Kbd> — jump to start/end</li>
+                  </ul>
                 </div>
               </Dialog.Content>
             </Dialog.Portal>
@@ -556,9 +642,13 @@ export default function ReaderPage() {
               ref={articleHeaderRef}
               className={cn("shrink-0", isCompactView ? "mb-4" : "mb-8")}
             >
-              {(article.siteName || article.byline) && (
+              {(article.siteName || article.byline || readingTimeMs > 0) && (
                 <p className="mb-2 text-sm text-muted-foreground">
-                  {[article.siteName, article.byline]
+                  {[
+                    article.siteName,
+                    article.byline,
+                    readingTimeMs > 0 ? readingTimeLabel : null,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
