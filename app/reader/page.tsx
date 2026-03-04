@@ -49,8 +49,10 @@ import { useReduceMotion } from "@/lib/reduce-motion-context";
 import { useReduceTransparency } from "@/lib/reduce-transparency-context";
 import { useTheme, THEMES, type Theme } from "@/lib/theme-context";
 import {
+  FOCAL_COLORS,
   FONT_FAMILIES,
   FONT_SIZES,
+  type FocalColorKey,
   type FontFamilyKey,
   type FontSizeKey,
 } from "@/components/speed-reader";
@@ -62,6 +64,7 @@ import {
   wrapWordsInHtml,
 } from "@/lib/speed-reader";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface MediaPreview {
   src: string;
@@ -203,10 +206,12 @@ export default function ReaderPage() {
   const {
     fontSize,
     fontFamily,
+    focalColor,
     sentenceEndDurationMs,
     speechBreakDurationMs,
     setFontSize,
     setFontFamily,
+    setFocalColor,
     setSentenceEndDurationMs,
     setSpeechBreakDurationMs,
   } = readerSettings;
@@ -297,7 +302,12 @@ export default function ReaderPage() {
           wordIndex?: number;
         };
         if (storedUrl === url && typeof storedIndex === "number") {
-          setWordIndex(Math.min(Math.max(0, storedIndex), wordCount - 1));
+          const restoredIndex = Math.min(
+            Math.max(0, storedIndex),
+            wordCount - 1,
+          );
+          setWordIndex(restoredIndex);
+          toast.info(`Resumed from word ${restoredIndex + 1}`);
           return;
         }
       }
@@ -435,17 +445,40 @@ export default function ReaderPage() {
     loadArticle(url);
   }
 
-  async function handleCopyLink() {
+  const handleCopyLink = useCallback(async () => {
     if (!article || !url) return;
     const shareUrl = `${window.location.origin}/reader?url=${encodeURIComponent(url)}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
+      toast.success("Link copied");
     } catch {
       // Ignore
     }
-  }
+  }, [article, url]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const el = document.activeElement;
+      const tag = el?.tagName.toLowerCase();
+      if (
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        el?.getAttribute("contenteditable") === "true" ||
+        el?.closest("[role='dialog']")
+      ) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        handleCopyLink();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleCopyLink]);
 
   const readingTimeMs = useMemo(() => {
     if (!articleText) return 0;
@@ -650,6 +683,47 @@ export default function ReaderPage() {
                   </div>
                   <div>
                     <label
+                      htmlFor="reader-focal-color"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Focal character color
+                    </label>
+                    <Select
+                      value={focalColor}
+                      onValueChange={(v) => setFocalColor(v as FocalColorKey)}
+                    >
+                      <SelectTrigger id="reader-focal-color">
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "size-3 shrink-0 rounded-full",
+                              FOCAL_COLORS[focalColor].previewClass,
+                            )}
+                          />
+                          <SelectValue />
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(FOCAL_COLORS) as FocalColorKey[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              <span className="flex items-center gap-2">
+                                <span
+                                  className={cn(
+                                    "size-3 shrink-0 rounded-full",
+                                    FOCAL_COLORS[key].previewClass,
+                                  )}
+                                />
+                                {FOCAL_COLORS[key].label}
+                              </span>
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
                       htmlFor="sentence-end"
                       className="mb-2 block text-sm font-medium text-zinc-100"
                     >
@@ -719,6 +793,10 @@ export default function ReaderPage() {
                     </li>
                     <li>
                       <Kbd>Home</Kbd> <Kbd>End</Kbd> — jump to start/end
+                    </li>
+                    <li>
+                      <Kbd>⌘</Kbd> <Kbd>⇧</Kbd> <Kbd>C</Kbd> — copy shareable
+                      link
                     </li>
                   </ul>
                 </div>
@@ -830,6 +908,7 @@ export default function ReaderPage() {
                     speechBreakDurationMsAt250Wpm={speechBreakDurationMs}
                     fontSize={fontSize}
                     fontFamily={fontFamily}
+                    focalColor={focalColor}
                     fillHeight
                     className="flex-1 min-h-0 justify-center border-0"
                   />
@@ -864,6 +943,7 @@ export default function ReaderPage() {
             speechBreakDurationMsAt250Wpm={speechBreakDurationMs}
             fontSize={fontSize}
             fontFamily={fontFamily}
+            focalColor={focalColor}
           />
         </div>
       )}

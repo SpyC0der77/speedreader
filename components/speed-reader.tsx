@@ -2,7 +2,13 @@
 
 import { Settings } from "lucide-react";
 import Link from "next/link";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import { NumberInput } from "@/components/ui/number-input";
@@ -61,12 +67,36 @@ export const FONT_SIZES = {
 
 export const FONT_FAMILIES = {
   sans: { label: "Sans", className: "font-sans" },
-  serif: { label: "Serif (Recommended)", className: "font-serif" },
+  serif: { label: "Serif", className: "font-serif" },
   mono: { label: "Mono", className: "font-mono" },
+} as const;
+
+export const FOCAL_COLORS = {
+  rose: {
+    label: "Rose",
+    className: "text-rose-500",
+    previewClass: "bg-rose-500",
+  },
+  blue: {
+    label: "Blue",
+    className: "text-blue-500",
+    previewClass: "bg-blue-500",
+  },
+  green: {
+    label: "Green",
+    className: "text-green-500",
+    previewClass: "bg-green-500",
+  },
+  amber: {
+    label: "Amber",
+    className: "text-amber-500",
+    previewClass: "bg-amber-500",
+  },
 } as const;
 
 export type FontSizeKey = keyof typeof FONT_SIZES;
 export type FontFamilyKey = keyof typeof FONT_FAMILIES;
+export type FocalColorKey = keyof typeof FOCAL_COLORS;
 
 interface SpeedReaderPanelProps extends SpeedReaderBaseProps {
   variant: "panel";
@@ -76,6 +106,7 @@ interface SpeedReaderPanelProps extends SpeedReaderBaseProps {
   fillHeight?: boolean;
   fontSize?: FontSizeKey;
   fontFamily?: FontFamilyKey;
+  focalColor?: FocalColorKey;
 }
 
 interface SpeedReaderTestProps extends SpeedReaderBaseProps {
@@ -111,20 +142,37 @@ export function SpeedReader(
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const fontSize = isFull ? readerSettings.fontSize : (props as SpeedReaderPanelProps).fontSize ?? "md";
-  const fontFamily = isFull ? readerSettings.fontFamily : (props as SpeedReaderPanelProps).fontFamily ?? "serif";
-  const sentenceEndDurationMs = isFull ? readerSettings.sentenceEndDurationMs : (props as SpeedReaderPanelProps).sentenceEndDurationMsAt250Wpm ?? DEFAULT_SENTENCE_END_MS;
-  const speechBreakDurationMs = isFull ? readerSettings.speechBreakDurationMs : (props as SpeedReaderPanelProps).speechBreakDurationMsAt250Wpm ?? DEFAULT_SPEECH_BREAK_MS;
+  const fontSize = isFull
+    ? readerSettings.fontSize
+    : ((props as SpeedReaderPanelProps).fontSize ?? "md");
+  const fontFamily = isFull
+    ? readerSettings.fontFamily
+    : ((props as SpeedReaderPanelProps).fontFamily ?? "serif");
+  const focalColor = isFull
+    ? readerSettings.focalColor
+    : ((props as SpeedReaderPanelProps).focalColor ?? "rose");
+  const sentenceEndDurationMs = isFull
+    ? readerSettings.sentenceEndDurationMs
+    : ((props as SpeedReaderPanelProps).sentenceEndDurationMsAt250Wpm ??
+      DEFAULT_SENTENCE_END_MS);
+  const speechBreakDurationMs = isFull
+    ? readerSettings.speechBreakDurationMs
+    : ((props as SpeedReaderPanelProps).speechBreakDurationMsAt250Wpm ??
+      DEFAULT_SPEECH_BREAK_MS);
   const setFontSize = readerSettings.setFontSize;
   const setFontFamily = readerSettings.setFontFamily;
+  const setFocalColor = readerSettings.setFocalColor;
   const setSentenceEndDurationMs = readerSettings.setSentenceEndDurationMs;
   const setSpeechBreakDurationMs = readerSettings.setSpeechBreakDurationMs;
   const timeoutRef = useRef<number | null>(null);
 
-  const effectiveSentenceEndMs =
-    isFull ? sentenceEndDurationMs : (props.sentenceEndDurationMsAt250Wpm ?? SENTENCE_END_DELAY_MS_AT_250_WPM);
-  const effectiveSpeechBreakMs =
-    isFull ? speechBreakDurationMs : (props.speechBreakDurationMsAt250Wpm ?? PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM);
+  const effectiveSentenceEndMs = isFull
+    ? sentenceEndDurationMs
+    : (props.sentenceEndDurationMsAt250Wpm ?? SENTENCE_END_DELAY_MS_AT_250_WPM);
+  const effectiveSpeechBreakMs = isFull
+    ? speechBreakDurationMs
+    : (props.speechBreakDurationMsAt250Wpm ??
+      PAUSE_PUNCTUATION_DELAY_MS_AT_250_WPM);
 
   const text = isFull
     ? inputText
@@ -284,8 +332,12 @@ export function SpeedReader(
       ) {
         return;
       }
-      const { handlePlayPauseRestart: playPause, setEffectiveWordIndex: setIndex, activeWordIndex: idx, wordsLength: len } =
-        handlersRef.current;
+      const {
+        handlePlayPauseRestart: playPause,
+        setEffectiveWordIndex: setIndex,
+        activeWordIndex: idx,
+        wordsLength: len,
+      } = handlersRef.current;
       if (len === 0) return;
 
       if (e.code === "Space") {
@@ -332,15 +384,21 @@ export function SpeedReader(
   const isPanelFillHeight =
     props.variant === "panel" && (props as SpeedReaderPanelProps).fillHeight;
 
-  const effectiveFontSize =
-    isFull ? fontSize : ((props as SpeedReaderPanelProps).fontSize ?? "md");
-  const effectiveFontFamily =
-    isFull ? fontFamily : ((props as SpeedReaderPanelProps).fontFamily ?? "serif");
+  const effectiveFontSize = isFull
+    ? fontSize
+    : ((props as SpeedReaderPanelProps).fontSize ?? "md");
+  const effectiveFontFamily = isFull
+    ? fontFamily
+    : ((props as SpeedReaderPanelProps).fontFamily ?? "serif");
+  const effectiveFocalColor = isFull
+    ? focalColor
+    : ((props as SpeedReaderPanelProps).focalColor ?? "rose");
 
   const wordDisplayClassName = cn(
     FONT_SIZES[effectiveFontSize].className,
     FONT_FAMILIES[effectiveFontFamily].className,
   );
+  const focalColorClassName = FOCAL_COLORS[effectiveFocalColor].className;
 
   const content = (
     <>
@@ -382,7 +440,7 @@ export function SpeedReader(
             <span className="justify-self-end pr-1 text-muted-foreground dark:text-zinc-100">
               {left}
             </span>
-            <span className="text-rose-500">{focalCharacter || "•"}</span>
+            <span className={focalColorClassName}>{focalCharacter || "•"}</span>
             <span className="justify-self-start pl-1 text-muted-foreground dark:text-zinc-100">
               {right}
             </span>
@@ -562,13 +620,11 @@ export function SpeedReader(
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {(Object.keys(FONT_SIZES) as FontSizeKey[]).map(
-                        (key) => (
-                          <SelectItem key={key} value={key}>
-                            {FONT_SIZES[key].label}
-                          </SelectItem>
-                        )
-                      )}
+                      {(Object.keys(FONT_SIZES) as FontSizeKey[]).map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {FONT_SIZES[key].label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -592,7 +648,48 @@ export function SpeedReader(
                           <SelectItem key={key} value={key}>
                             {FONT_FAMILIES[key].label}
                           </SelectItem>
-                        )
+                        ),
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="focal-color-select"
+                    className="mb-2 block text-sm font-medium text-zinc-100"
+                  >
+                    Focal character color
+                  </label>
+                  <Select
+                    value={focalColor}
+                    onValueChange={(v) => setFocalColor(v as FocalColorKey)}
+                  >
+                    <SelectTrigger id="focal-color-select">
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "size-3 shrink-0 rounded-full",
+                            FOCAL_COLORS[focalColor].previewClass,
+                          )}
+                        />
+                        <SelectValue />
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(FOCAL_COLORS) as FocalColorKey[]).map(
+                        (key) => (
+                          <SelectItem key={key} value={key}>
+                            <span className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  "size-3 shrink-0 rounded-full",
+                                  FOCAL_COLORS[key].previewClass,
+                                )}
+                              />
+                              {FOCAL_COLORS[key].label}
+                            </span>
+                          </SelectItem>
+                        ),
                       )}
                     </SelectContent>
                   </Select>
@@ -660,9 +757,15 @@ export function SpeedReader(
                   />
                 </div>
                 <ul className="pt-2 text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                  <li><Kbd>Space</Kbd> — play/pause</li>
-                  <li><Kbd>←</Kbd> <Kbd>→</Kbd> — skip words</li>
-                  <li><Kbd>Home</Kbd> <Kbd>End</Kbd> — jump to start/end</li>
+                  <li>
+                    <Kbd>Space</Kbd> — play/pause
+                  </li>
+                  <li>
+                    <Kbd>←</Kbd> <Kbd>→</Kbd> — skip words
+                  </li>
+                  <li>
+                    <Kbd>Home</Kbd> <Kbd>End</Kbd> — jump to start/end
+                  </li>
                 </ul>
               </div>
             </Dialog.Content>

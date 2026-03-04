@@ -7,7 +7,11 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import type { FontFamilyKey, FontSizeKey } from "@/components/speed-reader";
+import type {
+  FocalColorKey,
+  FontFamilyKey,
+  FontSizeKey,
+} from "@/components/speed-reader";
 
 const STORAGE_KEY = "speedreader-reader-settings";
 
@@ -17,6 +21,7 @@ const DEFAULT_SPEECH_BREAK_MS = 250;
 interface StoredSettings {
   fontSize: FontSizeKey;
   fontFamily: FontFamilyKey;
+  focalColor: FocalColorKey;
   sentenceEndDurationMs: number;
   speechBreakDurationMs: number;
 }
@@ -24,6 +29,7 @@ interface StoredSettings {
 const DEFAULTS: StoredSettings = {
   fontSize: "md",
   fontFamily: "serif",
+  focalColor: "rose",
   sentenceEndDurationMs: DEFAULT_SENTENCE_END_MS,
   speechBreakDurationMs: DEFAULT_SPEECH_BREAK_MS,
 };
@@ -43,6 +49,11 @@ function loadStored(): StoredSettings {
         parsed.fontFamily && ["sans", "serif", "mono"].includes(parsed.fontFamily)
           ? parsed.fontFamily
           : DEFAULTS.fontFamily,
+      focalColor:
+        parsed.focalColor &&
+        ["rose", "blue", "green", "amber"].includes(parsed.focalColor)
+          ? parsed.focalColor
+          : DEFAULTS.focalColor,
       sentenceEndDurationMs:
         typeof parsed.sentenceEndDurationMs === "number" &&
         parsed.sentenceEndDurationMs >= 0 &&
@@ -72,6 +83,7 @@ function saveStored(settings: StoredSettings) {
 interface ReaderSettingsContextValue extends StoredSettings {
   setFontSize: (v: FontSizeKey) => void;
   setFontFamily: (v: FontFamilyKey) => void;
+  setFocalColor: (v: FocalColorKey) => void;
   setSentenceEndDurationMs: (v: number) => void;
   setSpeechBreakDurationMs: (v: number) => void;
 }
@@ -104,6 +116,14 @@ export function ReaderSettingsProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
+  const setFocalColor = useCallback((focalColor: FocalColorKey) => {
+    setSettings((s) => {
+      const next = { ...s, focalColor };
+      saveStored(next);
+      return next;
+    });
+  }, []);
+
   const setSentenceEndDurationMs = useCallback((sentenceEndDurationMs: number) => {
     setSettings((s) => {
       const next = { ...s, sentenceEndDurationMs };
@@ -124,6 +144,7 @@ export function ReaderSettingsProvider({ children }: { children: React.ReactNode
     ...settings,
     setFontSize,
     setFontFamily,
+    setFocalColor,
     setSentenceEndDurationMs,
     setSpeechBreakDurationMs,
   };
@@ -142,6 +163,7 @@ export function useReaderSettings() {
       ...DEFAULTS,
       setFontSize: () => {},
       setFontFamily: () => {},
+      setFocalColor: () => {},
       setSentenceEndDurationMs: () => {},
       setSpeechBreakDurationMs: () => {},
     };

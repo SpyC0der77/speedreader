@@ -1,5 +1,6 @@
 "use client";
 
+import { Toaster } from "@/components/ui/sonner";
 import { ReaderSettingsProvider } from "@/lib/reader-settings-context";
 import { ReduceMotionProvider } from "@/lib/reduce-motion-context";
 import { ReduceTransparencyProvider } from "@/lib/reduce-transparency-context";
@@ -12,10 +13,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <TooltipProvider>
         <ReduceTransparencyProvider>
           <ReduceMotionProvider>
-          <ReaderSettingsProvider>{children}</ReaderSettingsProvider>
-        </ReduceMotionProvider>
+            <ReaderSettingsProvider>{children}</ReaderSettingsProvider>
+          </ReduceMotionProvider>
         </ReduceTransparencyProvider>
       </TooltipProvider>
+      <Toaster />
     </ThemeProvider>
   );
 }
