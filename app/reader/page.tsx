@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, BookOpen, Gauge, Link2, Loader2, Settings } from "lucide-react";
+import { ArrowLeft, BookOpen, Gauge, History, Link2, Loader2, Menu, Settings } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { SpeedReader } from "@/components/speed-reader";
 import {
@@ -17,6 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Kbd } from "@/components/ui/kbd";
 import { Slider } from "@/components/ui/slider";
 import { useReaderSettings } from "@/lib/reader-settings-context";
@@ -152,7 +161,14 @@ interface ArticleData {
 }
 
 const READING_POSITION_KEY = "speedreader-reading-position";
+const PREVIOUS_ARTICLES_KEY = "speedreader-previous-articles";
+const PREVIOUS_ARTICLES_MAX = 15;
 const DEFAULT_WPM = 300;
+
+interface PreviousArticle {
+  url: string;
+  title: string;
+}
 
 export default function ReaderPage() {
   const searchParams = useSearchParams();
@@ -180,6 +196,7 @@ export default function ReaderPage() {
   const [showArticleOnMobile, setShowArticleOnMobile] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<MediaPreview | null>(null);
+  const [previousArticles, setPreviousArticles] = useState<PreviousArticle[]>([]);
   const articleBodyRef = useRef<HTMLDivElement>(null);
   const articleHeaderRef = useRef<HTMLElement>(null);
   const articleScrollContainerRef = useRef<HTMLDivElement>(null);
@@ -341,10 +358,39 @@ export default function ReaderPage() {
       }
 
       setArticle(data);
+
+      const entry: PreviousArticle = {
+        url: trimmed,
+        title: data.title ?? new URL(trimmed).hostname,
+      };
+      setPreviousArticles((prev) => {
+        const filtered = prev.filter((a) => a.url !== trimmed);
+        const next = [entry, ...filtered].slice(0, PREVIOUS_ARTICLES_MAX);
+        try {
+          localStorage.setItem(PREVIOUS_ARTICLES_KEY, JSON.stringify(next));
+        } catch {
+          // Ignore
+        }
+        return next;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PREVIOUS_ARTICLES_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as PreviousArticle[];
+        if (Array.isArray(parsed)) {
+          setPreviousArticles(parsed);
+        }
+      }
+    } catch {
+      // Ignore
     }
   }, []);
 
@@ -395,7 +441,7 @@ export default function ReaderPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header
           className={cn(
-            "sticky top-0 z-10 border-b border-border/50",
+            "sticky top-0 z-10 border-b border-border/50 print:hidden",
             reduceTransparency
               ? "bg-background"
               : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
@@ -427,19 +473,52 @@ export default function ReaderPage() {
               )}
             </Button>
           </form>
-          {article && url && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopyLink}
-              aria-label={copiedLink ? "Copied" : "Copy shareable link"}
-              title="Copy shareable link"
-              className="gap-1.5"
-            >
-              <Link2 className="size-5 shrink-0" />
-              {copiedLink && <span className="text-xs">Copied</span>}
-            </Button>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Open menu">
+                <Menu className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[12rem]">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <History className="size-4" />
+                  Previously loaded articles
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {previousArticles.length === 0 ? (
+                    <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                      No recent articles
+                    </div>
+                  ) : (
+                    previousArticles.map((a) => (
+                      <DropdownMenuItem
+                        key={a.url}
+                        onClick={() => {
+                          setUrl(a.url);
+                          loadArticle(a.url);
+                        }}
+                        className="max-w-[min(18rem,85vw)] cursor-pointer"
+                      >
+                        <span className="truncate" title={a.title}>
+                          {a.title}
+                        </span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              {article && url && (
+                <DropdownMenuItem
+                  onClick={handleCopyLink}
+                  className="cursor-pointer"
+                >
+                  <Link2 className="size-4" />
+                  {copiedLink ? "Copied" : "Copy shareable link"}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <Dialog.Trigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open settings">
@@ -662,7 +741,7 @@ export default function ReaderPage() {
                 </p>
               )}
               <div
-                className={cn("mt-4 flex w-full", !isCompactView && "hidden")}
+                className={cn("mt-4 flex w-full print:hidden", !isCompactView && "hidden")}
               >
                 <Button
                   variant="outline"
@@ -686,27 +765,26 @@ export default function ReaderPage() {
             </header>
 
             <div className="relative flex min-h-0 flex-1 flex-col">
-              {showArticleOnMobile || !isCompactView ? (
-                <div
-                  ref={articleScrollContainerRef}
-                  className={cn(
-                    "min-h-0 flex-1 flex-col overflow-auto",
-                    !isCompactView && "flex-none overflow-visible",
-                  )}
-                >
-                  <ArticleBody
-                    ref={articleBodyRef}
-                    html={wrappedContent ?? processedContent ?? article?.content ?? ""}
-                    wordIndex={wordIndex}
-                    onWordClick={handleWordClick}
-                    onMediaClick={handleMediaClick}
-                    scrollToWord={scrollToWordInArticleArea}
-                  />
-                </div>
-              ) : null}
+              <div
+                ref={articleScrollContainerRef}
+                className={cn(
+                  "min-h-0 flex-1 flex-col overflow-auto",
+                  !isCompactView && "flex-none overflow-visible",
+                  isCompactView && !showArticleOnMobile && "hidden print:block",
+                )}
+              >
+                <ArticleBody
+                  ref={articleBodyRef}
+                  html={wrappedContent ?? processedContent ?? article?.content ?? ""}
+                  wordIndex={wordIndex}
+                  onWordClick={handleWordClick}
+                  onMediaClick={handleMediaClick}
+                  scrollToWord={scrollToWordInArticleArea}
+                />
+              </div>
 
               {articleText && isCompactView && !showArticleOnMobile && (
-                <div className="flex min-h-0 flex-1 flex-col">
+                <div className="flex min-h-0 flex-1 flex-col print:hidden">
                   <SpeedReader
                     key={article.content}
                     variant="panel"
@@ -737,7 +815,7 @@ export default function ReaderPage() {
       </main>
 
       {article && articleText && !isCompactView && (
-        <div ref={panelRef} className="fixed bottom-0 left-0 right-0 z-20">
+        <div ref={panelRef} className="fixed bottom-0 left-0 right-0 z-20 print:hidden">
           <SpeedReader
             key={article.content}
             variant="panel"

@@ -222,3 +222,25 @@ body {
 [data-reduce-motion="true"] {
   scroll-behavior: auto;
 }
+
+/* Print: clean article-only output */
+@media print {
+  .reader-content {
+    padding: 0 !important;
+  }
+
+  .reader-article {
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+
+  .reader-article [data-word-index].speed-reader-highlight {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+}
