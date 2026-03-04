@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft,
+  Bookmark,
   BookOpen,
   Gauge,
   History,
@@ -228,6 +229,14 @@ export default function ReaderPage() {
   const [previousArticles, setPreviousArticles] = useState<PreviousArticle[]>(
     [],
   );
+  const [isBookmarkletOpen, setIsBookmarkletOpen] = useState(false);
+
+  const setBookmarkletRef = useCallback((node: HTMLAnchorElement | null) => {
+    if (node && typeof window !== "undefined") {
+      node.href = `javascript:(function(){location.href='${window.location.origin}/reader?url='+encodeURIComponent(location.href)})()`;
+    }
+  }, []);
+
   const articleBodyRef = useRef<HTMLDivElement>(null);
   const articleHeaderRef = useRef<HTMLElement>(null);
   const articleScrollContainerRef = useRef<HTMLDivElement>(null);
@@ -589,8 +598,54 @@ export default function ReaderPage() {
                   {copiedLink ? "Copied" : "Copy shareable link"}
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem
+                onClick={() => setIsBookmarkletOpen(true)}
+                className="cursor-pointer"
+              >
+                <Bookmark className="size-4" />
+                Bookmarklet
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Dialog.Root
+            open={isBookmarkletOpen}
+            onOpenChange={setIsBookmarkletOpen}
+          >
+            <Dialog.Portal>
+              <Dialog.Overlay
+                className={cn(
+                  "fixed inset-0 z-50",
+                  reduceTransparency ? "bg-black" : "bg-black/80",
+                  "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+                )}
+              />
+              <Dialog.Content
+                className={cn(
+                  "fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-zinc-900 p-6 shadow-xl",
+                  reduceTransparency ? "border-zinc-700" : "border-white/10",
+                  "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+                )}
+              >
+                <Dialog.Title className="mb-2 text-lg font-semibold text-zinc-100">
+                  Bookmarklet
+                </Dialog.Title>
+                <Dialog.Description className="mb-4 text-sm text-muted-foreground">
+                  Drag this link to your bookmarks bar. On any article page,
+                  click it to open in SpeedReader.
+                </Dialog.Description>
+                <a
+                  ref={setBookmarkletRef}
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                  className="inline-flex cursor-grab items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-700"
+                  title="Drag to your bookmarks bar"
+                >
+                  <Bookmark className="size-4 shrink-0" />
+                  Read in SpeedReader
+                </a>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
           <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <Dialog.Trigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open settings">
