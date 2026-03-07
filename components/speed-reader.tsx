@@ -11,6 +11,15 @@ import React, {
 } from "react";
 import { Dialog } from "radix-ui";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { NumberInput } from "@/components/ui/number-input";
 import {
   Select,
@@ -59,10 +68,10 @@ interface SpeedReaderFullProps extends SpeedReaderBaseProps {
 }
 
 export const FONT_SIZES = {
-  sm: { label: "Small", className: "text-4xl sm:text-5xl" },
-  md: { label: "Medium", className: "text-5xl sm:text-6xl" },
-  lg: { label: "Large", className: "text-6xl sm:text-7xl" },
-  xl: { label: "Extra large", className: "text-7xl sm:text-8xl" },
+  sm: { label: "Small", className: "text-3xl sm:text-4xl md:text-5xl" },
+  md: { label: "Medium", className: "text-4xl sm:text-5xl md:text-6xl" },
+  lg: { label: "Large", className: "text-5xl sm:text-6xl md:text-7xl" },
+  xl: { label: "Extra large", className: "text-6xl sm:text-7xl md:text-8xl" },
 } as const;
 
 export const FONT_FAMILIES = {
@@ -144,6 +153,7 @@ export function SpeedReader(
       : readerSettings.setWordsPerMinute;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const fontSize = isFull
     ? readerSettings.fontSize
     : ((props as SpeedReaderPanelProps).fontSize ?? "md");
@@ -418,11 +428,11 @@ export function SpeedReader(
       >
         <div
           className={cn(
-            "relative mx-auto flex w-full max-w-4xl items-center justify-center overflow-hidden rounded-xl border sm:rounded-2xl",
+            "relative mx-auto flex w-full max-w-4xl items-center justify-center overflow-hidden rounded-lg border sm:rounded-xl",
             reduceTransparency
               ? "border-border bg-muted dark:border-zinc-700"
               : "border-border bg-muted/80 dark:border-white/10 dark:bg-muted/90",
-            isPanelFillHeight ? "min-h-48 flex-1" : "h-60",
+            isPanelFillHeight ? "min-h-40 flex-1 sm:min-h-48" : "h-44 sm:h-60",
           )}
         >
           <div className="pointer-events-none absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border dark:bg-white/20" />
@@ -441,7 +451,7 @@ export function SpeedReader(
 
           <div
             className={cn(
-              "grid w-full max-w-2xl grid-cols-[1fr_auto_1fr] items-baseline px-4 leading-none sm:px-6",
+              "grid w-full max-w-2xl grid-cols-[1fr_auto_1fr] items-baseline px-3 leading-none sm:px-6",
               wordDisplayClassName,
             )}
           >
@@ -457,7 +467,7 @@ export function SpeedReader(
 
         <div
           className={cn(
-            "mt-3 flex items-center justify-center gap-4 text-sm text-muted-foreground transition-opacity duration-300",
+            "mt-2 flex items-center justify-center gap-4 px-2 text-center text-sm text-muted-foreground transition-opacity duration-300 sm:mt-3",
             isPlaying ? "opacity-40" : "opacity-100",
           )}
         >
@@ -471,7 +481,7 @@ export function SpeedReader(
         {words.length > 0 && !isTest && (
           <div
             className={cn(
-              "mx-auto mt-4 w-full max-w-4xl shrink-0 px-2 transition-opacity duration-300",
+              "mx-auto mt-3 w-full max-w-4xl shrink-0 px-1 transition-opacity duration-300 sm:mt-4 sm:px-2",
               isPanelFillHeight ? "mb-4 sm:mb-6" : "mb-6",
               isPlaying ? "opacity-40" : "opacity-100",
             )}
@@ -490,7 +500,7 @@ export function SpeedReader(
 
       <section
         className={cn(
-          "flex w-full flex-wrap items-center justify-center gap-4 transition-opacity duration-300",
+          "flex w-full flex-wrap items-center justify-center gap-3 transition-opacity duration-300 sm:gap-4",
           isPlaying ? "opacity-40" : "opacity-100",
         )}
       >
@@ -499,6 +509,7 @@ export function SpeedReader(
           size="lg"
           onClick={handlePlayPauseRestart}
           disabled={words.length === 0}
+          className="px-5 sm:px-6"
         >
           {isPlaying ? "Pause" : isFinished ? "Restart" : "Play"}
         </Button>
@@ -545,51 +556,53 @@ export function SpeedReader(
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center px-4 py-10 sm:px-8">
-      <div
-        className={cn(
-          "fixed right-4 top-4 z-50 flex items-center gap-2 transition-opacity duration-300 sm:right-8 sm:top-8",
-          isPlaying ? "opacity-40" : "opacity-100",
-        )}
-      >
+        <div
+          className={cn(
+            "fixed right-3 top-3 z-50 flex items-center gap-2 transition-opacity duration-300 sm:right-8 sm:top-8",
+            isPlaying ? "opacity-40" : "opacity-100",
+          )}
+        >
         <Link
           href="/reader"
           className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Article Reader
         </Link>
-        <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-          <Dialog.Trigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Open settings"
-              className="size-9"
-            >
-              <Settings className="size-5" />
-            </Button>
-          </Dialog.Trigger>
-          <Dialog.Portal>
-            <Dialog.Overlay
-              className={cn(
-                "fixed inset-0 z-50",
-                reduceTransparency ? "bg-black" : "bg-black/80",
-                "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-              )}
-            />
-            <Dialog.Content
-              className={cn(
-                "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-zinc-900 p-6 shadow-xl",
-                reduceTransparency ? "border-zinc-700" : "border-white/10",
-                "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-              )}
-            >
-              <Dialog.Title className="mb-4 text-lg font-semibold text-zinc-100">
-                Settings
-              </Dialog.Title>
-              <Dialog.Description className="mb-4 text-sm text-muted-foreground">
-                Adjust pause durations (values at 250 WPM; scale with speed).
-              </Dialog.Description>
-              <div className="space-y-4">
+        {isDesktop ? (
+          <Dialog.Root open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <Dialog.Trigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Open settings"
+                className="size-8 sm:size-9"
+              >
+                <Settings className="size-5" />
+              </Button>
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Overlay
+                className={cn(
+                  "fixed inset-0 z-50",
+                  reduceTransparency ? "bg-black" : "bg-black/80",
+                  "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+                )}
+              />
+              <Dialog.Content
+                className={cn(
+                  "fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border bg-zinc-900 p-4 shadow-xl sm:rounded-xl sm:p-6",
+                  reduceTransparency ? "border-zinc-700" : "border-white/10",
+                  "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+                )}
+              >
+                <Dialog.Title className="mb-2 shrink-0 text-lg font-semibold text-zinc-100">
+                  Settings
+                </Dialog.Title>
+                <Dialog.Description className="mb-4 shrink-0 text-sm text-muted-foreground">
+                  Adjust pause durations (values at 250 WPM; scale with speed).
+                </Dialog.Description>
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="space-y-4">
                 <div>
                   <label
                     htmlFor="theme-select"
@@ -779,16 +792,233 @@ export function SpeedReader(
                   </li>
                 </ul>
               </div>
+              </div>
             </Dialog.Content>
           </Dialog.Portal>
         </Dialog.Root>
+        ) : (
+          <Drawer open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <DrawerTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Open settings"
+                className="size-8 sm:size-9"
+              >
+                <Settings className="size-5" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden">
+              <DrawerHeader className="shrink-0 text-left">
+                <DrawerTitle>Settings</DrawerTitle>
+                <DrawerDescription>
+                  Adjust pause durations (values at 250 WPM; scale with speed).
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="drawer-theme-select"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Theme
+                    </label>
+                    <Select
+                      value={theme}
+                      onValueChange={(v) => setTheme(v as Theme)}
+                    >
+                      <SelectTrigger id="drawer-theme-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(THEMES) as Theme[]).map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {THEMES[key]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="drawer-font-size-select"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Font size
+                    </label>
+                    <Select
+                      value={fontSize}
+                      onValueChange={(v) => setFontSize(v as FontSizeKey)}
+                    >
+                      <SelectTrigger id="drawer-font-size-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(FONT_SIZES) as FontSizeKey[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              {FONT_SIZES[key].label}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="drawer-font-family-select"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Font family
+                    </label>
+                    <Select
+                      value={fontFamily}
+                      onValueChange={(v) => setFontFamily(v as FontFamilyKey)}
+                    >
+                      <SelectTrigger id="drawer-font-family-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(FONT_FAMILIES) as FontFamilyKey[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              {FONT_FAMILIES[key].label}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="drawer-focal-color-select"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Focal character color
+                    </label>
+                    <Select
+                      value={focalColor}
+                      onValueChange={(v) => setFocalColor(v as FocalColorKey)}
+                    >
+                      <SelectTrigger id="drawer-focal-color-select">
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "size-3 shrink-0 rounded-full",
+                              FOCAL_COLORS[focalColor].previewClass,
+                            )}
+                          />
+                          <SelectValue />
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(FOCAL_COLORS) as FocalColorKey[]).map(
+                          (key) => (
+                            <SelectItem key={key} value={key}>
+                              <span className="flex items-center gap-2">
+                                <span
+                                  className={cn(
+                                    "size-3 shrink-0 rounded-full",
+                                    FOCAL_COLORS[key].previewClass,
+                                  )}
+                                />
+                                {FOCAL_COLORS[key].label}
+                              </span>
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="drawer-sentence-end-full"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Sentence End Duration ({sentenceEndDurationMs}ms)
+                    </label>
+                    <Slider
+                      id="drawer-sentence-end-full"
+                      min={0}
+                      max={1000}
+                      step={50}
+                      value={[sentenceEndDurationMs]}
+                      onValueChange={([v]) =>
+                        setSentenceEndDurationMs(v ?? DEFAULT_SENTENCE_END_MS)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="drawer-speech-break-full"
+                      className="mb-2 block text-sm font-medium text-zinc-100"
+                    >
+                      Speech Break Duration ({speechBreakDurationMs}ms)
+                    </label>
+                    <Slider
+                      id="drawer-speech-break-full"
+                      min={0}
+                      max={1000}
+                      step={25}
+                      value={[speechBreakDurationMs]}
+                      onValueChange={([v]) =>
+                        setSpeechBreakDurationMs(v ?? DEFAULT_SPEECH_BREAK_MS)
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label
+                      htmlFor="drawer-reduce-transparency-speedreader"
+                      className="text-sm font-medium text-zinc-100"
+                    >
+                      Reduce transparency
+                    </label>
+                    <Switch
+                      id="drawer-reduce-transparency-speedreader"
+                      checked={reduceTransparency}
+                      onCheckedChange={setReduceTransparency}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <label
+                      htmlFor="drawer-reduce-motion-speedreader"
+                      className="text-sm font-medium text-zinc-100"
+                    >
+                      Reduce motion
+                    </label>
+                    <Switch
+                      id="drawer-reduce-motion-speedreader"
+                      checked={reduceMotion}
+                      onCheckedChange={setReduceMotion}
+                    />
+                  </div>
+                  <ul className="pt-2 text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                    <li>
+                      <Kbd>Space</Kbd> — play/pause
+                    </li>
+                    <li>
+                      <Kbd>R</Kbd> — restart from beginning
+                    </li>
+                    <li>
+                      <Kbd>←</Kbd> <Kbd>→</Kbd> — skip words
+                    </li>
+                    <li>
+                      <Kbd>Home</Kbd> <Kbd>End</Kbd> — jump to start/end
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        )}
       </div>
       <div className="min-h-0 flex-1 shrink-0" aria-hidden />
       {content}
       <div className="min-h-0 flex-1 shrink-0" aria-hidden />
       <section
         className={cn(
-          "w-full max-w-4xl transition-opacity duration-300",
+          "w-full max-w-4xl pb-6 transition-opacity duration-300 sm:pb-0",
           isPlaying ? "opacity-40" : "opacity-100",
         )}
       >
