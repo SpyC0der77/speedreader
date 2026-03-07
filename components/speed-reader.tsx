@@ -993,20 +993,6 @@ export function SpeedReader(
                       onCheckedChange={setReduceMotion}
                     />
                   </div>
-                  <ul className="pt-2 text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                    <li>
-                      <Kbd>Space</Kbd> — play/pause
-                    </li>
-                    <li>
-                      <Kbd>R</Kbd> — restart from beginning
-                    </li>
-                    <li>
-                      <Kbd>←</Kbd> <Kbd>→</Kbd> — skip words
-                    </li>
-                    <li>
-                      <Kbd>Home</Kbd> <Kbd>End</Kbd> — jump to start/end
-                    </li>
-                  </ul>
                 </div>
               </div>
             </DrawerContent>
