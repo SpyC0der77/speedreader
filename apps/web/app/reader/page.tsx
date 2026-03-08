@@ -182,7 +182,41 @@ interface ArticleData {
 
 const READING_POSITION_KEY = "wordflash-reading-position";
 const PREVIOUS_ARTICLES_KEY = "wordflash-previous-articles";
+const LEGACY_READING_POSITION_KEY = "speedreader-reading-position";
+const LEGACY_PREVIOUS_ARTICLES_KEY = "speedreader-previous-articles";
 const PREVIOUS_ARTICLES_MAX = 15;
+
+function getReadingPositionRaw(): string | null {
+  if (typeof window === "undefined") return null;
+  const raw =
+    localStorage.getItem(READING_POSITION_KEY) ??
+    localStorage.getItem(LEGACY_READING_POSITION_KEY);
+  if (raw && localStorage.getItem(READING_POSITION_KEY) === null) {
+    try {
+      localStorage.setItem(READING_POSITION_KEY, raw);
+      localStorage.removeItem(LEGACY_READING_POSITION_KEY);
+    } catch {
+      // Ignore migration errors
+    }
+  }
+  return raw;
+}
+
+function getPreviousArticlesRaw(): string | null {
+  if (typeof window === "undefined") return null;
+  const raw =
+    localStorage.getItem(PREVIOUS_ARTICLES_KEY) ??
+    localStorage.getItem(LEGACY_PREVIOUS_ARTICLES_KEY);
+  if (raw && localStorage.getItem(PREVIOUS_ARTICLES_KEY) === null) {
+    try {
+      localStorage.setItem(PREVIOUS_ARTICLES_KEY, raw);
+      localStorage.removeItem(LEGACY_PREVIOUS_ARTICLES_KEY);
+    } catch {
+      // Ignore migration errors
+    }
+  }
+  return raw;
+}
 
 interface PreviousArticle {
   url: string;
@@ -295,7 +329,7 @@ export default function ReaderPage() {
       return;
     }
     try {
-      const stored = localStorage.getItem(READING_POSITION_KEY);
+      const stored = getReadingPositionRaw();
       if (stored && url) {
         const { url: storedUrl, wordIndex: storedIndex } = JSON.parse(
           stored,
@@ -424,7 +458,7 @@ export default function ReaderPage() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(PREVIOUS_ARTICLES_KEY);
+      const stored = getPreviousArticlesRaw();
       if (stored) {
         const parsed = JSON.parse(stored) as PreviousArticle[];
         if (Array.isArray(parsed)) {
