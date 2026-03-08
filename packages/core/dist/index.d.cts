@@ -14,16 +14,23 @@ declare function getWordParts(word: string): {
     right: string;
 };
 /**
- * Extracts plain text from HTML using regex (no DOM). Use in React Native or
- * other environments without DOMParser. Word boundaries align with parseWords.
- */
-declare function extractTextFromHtmlRegex(html: string): string;
-/**
  * Preprocesses HTML so trailing commas after links are moved inside the link.
  * E.g. `<a href="...">link</a>, ` becomes `<a href="...">link,</a> `.
  * This ensures the comma is attached to the last word of the link for
  * parseWords/wrapWordsInHtml, rather than being treated as its own word.
  */
 declare function attachTrailingCommasToLinks(html: string): string;
+/**
+ * Extracts plain text from HTML using the SAME word-boundary logic as
+ * wrapWordsInHtml. Must be used for SpeedReader text so indices match the
+ * Reader View highlight. Client-only (DOMParser); returns "" during SSR.
+ */
+declare function extractTextFromHtml(html: string): string;
+/**
+ * Wraps each word in the HTML with spans containing data-word-index for
+ * highlighting. Depends on window/document (DOMParser). During SSR
+ * (typeof document === "undefined"), returns the unmodified HTML.
+ */
+declare function wrapWordsInHtml(html: string): string;
 
-export { attachTrailingCommasToLinks, calculateReadingTimeMs, extractTextFromHtmlRegex, getFocalCharacterIndex, getWordParts, parseWords, wordEndsSentence, wordHasPausePunctuation };
+export { attachTrailingCommasToLinks, calculateReadingTimeMs, extractTextFromHtml, getFocalCharacterIndex, getWordParts, parseWords, wordEndsSentence, wordHasPausePunctuation, wrapWordsInHtml };

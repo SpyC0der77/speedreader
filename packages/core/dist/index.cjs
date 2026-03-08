@@ -22,12 +22,13 @@ var index_exports = {};
 __export(index_exports, {
   attachTrailingCommasToLinks: () => attachTrailingCommasToLinks,
   calculateReadingTimeMs: () => calculateReadingTimeMs,
-  extractTextFromHtmlRegex: () => extractTextFromHtmlRegex,
+  extractTextFromHtml: () => extractTextFromHtml,
   getFocalCharacterIndex: () => getFocalCharacterIndex,
   getWordParts: () => getWordParts,
   parseWords: () => parseWords,
   wordEndsSentence: () => wordEndsSentence,
-  wordHasPausePunctuation: () => wordHasPausePunctuation
+  wordHasPausePunctuation: () => wordHasPausePunctuation,
+  wrapWordsInHtml: () => wrapWordsInHtml
 });
 module.exports = __toCommonJS(index_exports);
 
@@ -81,23 +82,90 @@ function getWordParts(word) {
     right: word.slice(focalCharacterIndex + 1)
   };
 }
-function extractTextFromHtmlRegex(html) {
-  return html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
 function attachTrailingCommasToLinks(html) {
   return html.replace(/(<\/a>)(\s*,\s*)/g, (_, tag, punct) => {
     const trailingSpace = /\s$/.test(punct) ? " " : "";
     return "," + tag + trailingSpace;
   });
 }
+function extractTextFromHtml(html) {
+  if (typeof document === "undefined") return "";
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const parts = [];
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node instanceof Text) textNodes.push(node);
+  }
+  let hasProcessedWords = false;
+  for (const node of textNodes) {
+    const text = (node.textContent ?? "").replace(/\s+/g, " ");
+    const nodeParts = text.split(/( )/);
+    const hasContent = text.trim().length > 0;
+    const startsWithSpace = /^\s/.test(text);
+    const needsLeadingSpace = hasContent && !startsWithSpace && hasProcessedWords;
+    if (needsLeadingSpace) {
+      parts.push(" ");
+    }
+    for (const part of nodeParts) {
+      if (part === " ") {
+        parts.push(" ");
+      } else if (part) {
+        parts.push(part);
+        hasProcessedWords = true;
+      }
+    }
+  }
+  return parts.join("").replace(/\s+/g, " ").trim();
+}
+function wrapWordsInHtml(html) {
+  if (typeof document === "undefined") return html;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  let wordIndex = 0;
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node instanceof Text) textNodes.push(node);
+  }
+  let hasProcessedWords = false;
+  for (const node of textNodes) {
+    const text = (node.textContent ?? "").replace(/\s+/g, " ");
+    const parts = text.split(/( )/);
+    const fragment = doc.createDocumentFragment();
+    const hasContent = text.trim().length > 0;
+    const startsWithSpace = /^\s/.test(text);
+    const needsLeadingSpace = hasContent && !startsWithSpace && hasProcessedWords;
+    if (needsLeadingSpace) {
+      fragment.appendChild(doc.createTextNode(" "));
+    }
+    for (const part of parts) {
+      if (part === " ") {
+        fragment.appendChild(doc.createTextNode(" "));
+      } else if (part) {
+        const span = doc.createElement("span");
+        span.setAttribute("data-word-index", String(wordIndex++));
+        span.textContent = part;
+        fragment.appendChild(span);
+        hasProcessedWords = true;
+      }
+    }
+    node.parentNode?.replaceChild(fragment, node);
+  }
+  return doc.body.innerHTML;
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   attachTrailingCommasToLinks,
   calculateReadingTimeMs,
-  extractTextFromHtmlRegex,
+  extractTextFromHtml,
   getFocalCharacterIndex,
   getWordParts,
   parseWords,
   wordEndsSentence,
-  wordHasPausePunctuation
+  wordHasPausePunctuation,
+  wrapWordsInHtml
 });
