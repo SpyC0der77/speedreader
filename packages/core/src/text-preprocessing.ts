@@ -2,8 +2,14 @@ export function parseWords(text: string): string[] {
   return text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
 }
 
+function getGraphemeClusters(word: string): string[] {
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  return [...segmenter.segment(word)].map((s) => s.segment);
+}
+
 export function getFocalCharacterIndex(word: string): number {
-  const length = word.length;
+  const clusters = getGraphemeClusters(word);
+  const length = clusters.length;
   if (length <= 1) return 0;
   if (length <= 5) return 1;
   if (length <= 9) return 2;
@@ -12,11 +18,12 @@ export function getFocalCharacterIndex(word: string): number {
 }
 
 export function getWordParts(word: string) {
+  const clusters = getGraphemeClusters(word);
   const focalCharacterIndex = getFocalCharacterIndex(word);
   return {
-    left: word.slice(0, focalCharacterIndex),
-    focalCharacter: word[focalCharacterIndex] ?? "",
-    right: word.slice(focalCharacterIndex + 1),
+    left: clusters.slice(0, focalCharacterIndex).join(""),
+    focalCharacter: clusters[focalCharacterIndex] ?? "",
+    right: clusters.slice(focalCharacterIndex + 1).join(""),
   };
 }
 
@@ -36,7 +43,7 @@ export function attachTrailingCommasToLinks(html: string): string {
 /**
  * Extracts plain text from HTML using the SAME word-boundary logic as
  * wrapWordsInHtml. Must be used for SpeedReader text so indices match the
- * Reader View highlight. Client-only (DOMParser).
+ * Reader View highlight. Client-only (DOMParser); returns "" during SSR.
  */
 export function extractTextFromHtml(html: string): string {
   if (typeof document === "undefined") return "";
@@ -81,12 +88,9 @@ export function extractTextFromHtml(html: string): string {
 }
 
 /**
- * Client-only utility that wraps each word in the HTML with spans containing
- * data-word-index for highlighting. Depends on window/document (DOMParser).
- * During SSR (typeof document === "undefined"), returns the unmodified HTML.
- * Callers must invoke this only from client contexts (e.g., inside useEffect or
- * a Client Component) so words are indexed/highlighted. For stricter behavior,
- * consider throwing when document is undefined or guarding call sites.
+ * Wraps each word in the HTML with spans containing data-word-index for
+ * highlighting. Depends on window/document (DOMParser). During SSR
+ * (typeof document === "undefined"), returns the unmodified HTML.
  */
 export function wrapWordsInHtml(html: string): string {
   if (typeof document === "undefined") return html;
