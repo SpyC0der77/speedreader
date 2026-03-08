@@ -32,8 +32,13 @@ function calculateReadingTimeMs(words, wordsPerMinute, sentenceEndDurationMsAt25
 function parseWords(text) {
   return text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
 }
+function getGraphemeClusters(word) {
+  const segmenter = new Intl.Segmenter(void 0, { granularity: "grapheme" });
+  return [...segmenter.segment(word)].map((s) => s.segment);
+}
 function getFocalCharacterIndex(word) {
-  const length = word.length;
+  const clusters = getGraphemeClusters(word);
+  const length = clusters.length;
   if (length <= 1) return 0;
   if (length <= 5) return 1;
   if (length <= 9) return 2;
@@ -41,11 +46,12 @@ function getFocalCharacterIndex(word) {
   return Math.min(4, length - 1);
 }
 function getWordParts(word) {
+  const clusters = getGraphemeClusters(word);
   const focalCharacterIndex = getFocalCharacterIndex(word);
   return {
-    left: word.slice(0, focalCharacterIndex),
-    focalCharacter: word[focalCharacterIndex] ?? "",
-    right: word.slice(focalCharacterIndex + 1)
+    left: clusters.slice(0, focalCharacterIndex).join(""),
+    focalCharacter: clusters[focalCharacterIndex] ?? "",
+    right: clusters.slice(focalCharacterIndex + 1).join("")
   };
 }
 function attachTrailingCommasToLinks(html) {

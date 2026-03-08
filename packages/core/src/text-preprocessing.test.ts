@@ -282,6 +282,18 @@ describe("getFocalCharacterIndex", () => {
   it("returns 4 for words 14+ characters", () => {
     expect(getFocalCharacterIndex("supercalifragilistic")).toBe(4);
   });
+
+  it("uses grapheme clusters for emoji (not UTF-16 code units)", () => {
+    // "hello 👍" = 6 graphemes (h,e,l,l,o, space, 👍); 👍 is 1 grapheme, 2 UTF-16 units
+    expect(getFocalCharacterIndex("hello 👍")).toBe(2);
+  });
+
+  it("uses grapheme clusters for combining characters (e.g. café)", () => {
+    // "café" with composed é (U+00E9) = 4 graphemes
+    expect(getFocalCharacterIndex("café")).toBe(1);
+    // "cafe\u0301" (e + combining acute) = 4 graphemes
+    expect(getFocalCharacterIndex("cafe\u0301")).toBe(1);
+  });
 });
 
 describe("getWordParts", () => {
@@ -305,5 +317,23 @@ describe("getWordParts", () => {
     const parts = getWordParts("world!");
     expect(parts.focalCharacter).toBeDefined();
     expect(parts.left + parts.focalCharacter + parts.right).toBe("world!");
+  });
+
+  it("splits words with emoji correctly by grapheme clusters", () => {
+    const parts = getWordParts("hello 👍");
+    expect(parts.left + parts.focalCharacter + parts.right).toBe("hello 👍");
+    expect(parts.focalCharacter).toBe("l"); // 3rd grapheme (0-indexed 2) in "hello 👍"
+  });
+
+  it("splits words with combining characters correctly (café)", () => {
+    const parts = getWordParts("café");
+    expect(parts.left + parts.focalCharacter + parts.right).toBe("café");
+    expect(parts.focalCharacter).toBe("a"); // 2nd grapheme
+  });
+
+  it("splits words with decomposed accents correctly (e + combining acute)", () => {
+    const parts = getWordParts("cafe\u0301");
+    expect(parts.left + parts.focalCharacter + parts.right).toBe("cafe\u0301");
+    expect(parts.focalCharacter).toBe("a");
   });
 });

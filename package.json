@@ -10,12 +10,12 @@
     "dev": "bun run --filter speedreader dev",
     "dev:web": "bun run --filter speedreader dev",
     "dev:mobile": "bun run --filter speedreader-mobile dev",
-    "build": "bun run build --filter @speedreader/core && bun run build --filter speedreader",
-    "build:web": "bun run build --filter @speedreader/core && bun run build --filter speedreader",
-    "build:mobile": "bun run build --filter speedreader-mobile",
+    "build": "bun run --filter @speedreader/core build && bun run --filter speedreader build",
+    "build:web": "bun run --filter @speedreader/core build && bun run --filter speedreader build",
+    "build:mobile": "bun run --filter speedreader-mobile build",
     "lint": "bun run --filter '*' lint",
     "test": "bun run --filter '*' test",
-    "prepare": "bun run build --filter @speedreader/core"
+    "prepare": "bun run --filter @speedreader/core build"
   },
   "devDependencies": {
     "typescript": "^5"
