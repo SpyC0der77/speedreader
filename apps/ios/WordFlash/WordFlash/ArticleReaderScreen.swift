@@ -158,15 +158,19 @@ struct ArticleReaderScreen: View {
         GeometryReader { geometry in
             let isWide = geometry.size.width >= 950
             if isWide {
-                HStack(alignment: .top, spacing: 16) {
+                let panelWidth = min(460, max(360, geometry.size.width * 0.38))
+
+                HStack(alignment: .top, spacing: 20) {
                     articleContent
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     Divider()
 
-                    SpeedReaderPanelView(playback: playback, fillHeight: true)
-                        .frame(width: min(420, geometry.size.width * 0.4))
+                    SpeedReaderPanelView(playback: playback, fillHeight: false)
+                        .frame(width: panelWidth, alignment: .top)
                 }
+                .frame(maxWidth: 1250, maxHeight: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 VStack(spacing: 12) {
                     Picker("View", selection: $compactSection) {

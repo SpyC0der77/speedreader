@@ -18,6 +18,7 @@ struct TextReaderScreen: View {
         NavigationStack {
             GeometryReader { geometry in
                 let isPhoneLandscape = UIDevice.current.userInterfaceIdiom == .phone && geometry.size.width > geometry.size.height
+                let isPadLandscape = UIDevice.current.userInterfaceIdiom == .pad && geometry.size.width > geometry.size.height
 
                 Group {
                     if isPhoneLandscape {
@@ -26,6 +27,42 @@ struct TextReaderScreen: View {
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 8)
                         }
+                    } else if isPadLandscape {
+                        let readerWidth = min(560, geometry.size.width * 0.44)
+
+                        HStack(alignment: .top, spacing: 20) {
+                            SpeedReaderPanelView(playback: playback, fillHeight: false)
+                                .frame(width: readerWidth)
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    Label("Text", systemImage: "text.quote")
+                                        .font(.headline)
+                                    Spacer()
+                                    Text("\(words.count) words")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                TextEditor(text: $inputText)
+                                    .font(.system(size: 18, weight: .regular, design: .default))
+                                    .frame(minHeight: 300)
+                                    .padding(10)
+                                    .background(Color(uiColor: .secondarySystemBackground))
+                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            }
+                            .padding(14)
+                            .background(Color(uiColor: .systemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(Color.primary.opacity(0.07), lineWidth: 1)
+                            )
+                        }
+                        .frame(maxWidth: 1250, maxHeight: .infinity, alignment: .top)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
                     } else {
                         ScrollView {
                             VStack(spacing: 16) {
