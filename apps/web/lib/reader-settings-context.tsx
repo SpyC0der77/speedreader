@@ -82,11 +82,11 @@ function loadStored(): StoredSettings {
           : DEFAULTS.wordsPerMinute,
     };
     if (fromLegacy) {
-      saveStored(result);
       try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
         localStorage.removeItem(LEGACY_STORAGE_KEY);
       } catch {
-        // Ignore
+        // Ignore - keep legacy key if write fails; saveStored swallows errors
       }
     }
     return result;
