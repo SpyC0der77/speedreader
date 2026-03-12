@@ -612,6 +612,8 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
       ) {
         return;
       }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
       const {
         handlePlayPauseRestart: playPause,
         setEffectiveWordIndex: setIndex,
