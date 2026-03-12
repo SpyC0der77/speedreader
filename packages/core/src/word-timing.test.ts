@@ -28,6 +28,12 @@ describe("wordEndsSentence", () => {
     expect(wordEndsSentence("really?'")).toBe(true);
   });
 
+  it("returns true for words ending in closing parenthesis", () => {
+    expect(wordEndsSentence("(1)")).toBe(true);
+    expect(wordEndsSentence("end)")).toBe(true);
+    expect(wordEndsSentence("see)")).toBe(true);
+  });
+
   it("returns false for words ending in comma", () => {
     expect(wordEndsSentence("hello,")).toBe(false);
     expect(wordEndsSentence("well,")).toBe(false);
@@ -93,10 +99,11 @@ describe("wordHasPausePunctuation", () => {
     expect(wordHasPausePunctuation("well—'")).toBe(true);
   });
 
-  it("returns false for words ending in period, question, or exclamation", () => {
+  it("returns false for words ending in period, question, exclamation, or closing paren", () => {
     expect(wordHasPausePunctuation("end.")).toBe(false);
     expect(wordHasPausePunctuation("really?")).toBe(false);
     expect(wordHasPausePunctuation("wow!")).toBe(false);
+    expect(wordHasPausePunctuation("(1)")).toBe(false);
   });
 
   it("returns false for words without pause punctuation", () => {

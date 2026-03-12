@@ -36,7 +36,7 @@ enum SpeedReaderCore {
         let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
         return trimmed.range(
-            of: #"[.!?]["']?$"#,
+            of: #"[.!?)]["']?$"#,
             options: .regularExpression
         ) != nil
     }

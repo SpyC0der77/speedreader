@@ -1,6 +1,6 @@
 export function wordEndsSentence(word: string): boolean {
   const trimmed = word.trim();
-  return trimmed.length > 0 && /[.!?]["']?$/.test(trimmed);
+  return trimmed.length > 0 && /[.!?)]["']?$/.test(trimmed);
 }
 
 export function wordHasPausePunctuation(word: string): boolean {
