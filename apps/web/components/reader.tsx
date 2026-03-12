@@ -467,17 +467,10 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
     const listRect = list.getBoundingClientRect();
     const baseLeft = tabRect.left - listRect.left;
     const baseWidth = tabRect.width;
-    if (inputTab === "edit") {
-      setPillStyle({
-        left: baseLeft - 1,
-        width: baseWidth,
-      });
-    } else {
-      setPillStyle({
-        left: baseLeft,
-        width: baseWidth - 1,
-      });
-    }
+    setPillStyle({
+      left: baseLeft - (inputTab === "edit" ? 1 : 0),
+      width: baseWidth - (inputTab === "scrub" ? 1 : 0),
+    });
   }, [isFull, inputTab]);
 
   // Scroll scrub view to keep highlighted word visible
