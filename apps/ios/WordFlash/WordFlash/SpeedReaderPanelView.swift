@@ -141,6 +141,7 @@ struct SpeedReaderPanelView: View {
                     } label: {
                         Image(systemName: "backward.frame.fill")
                     }
+                    .keyboardShortcut(.leftArrow, modifiers: [])
                     .disabled(playback.words.isEmpty)
 
                     Button {
@@ -148,6 +149,7 @@ struct SpeedReaderPanelView: View {
                     } label: {
                         Image(systemName: playback.isPlaying ? "pause.fill" : (playback.isFinished ? "arrow.counterclockwise" : "play.fill"))
                     }
+                    .keyboardShortcut(.space, modifiers: [])
                     .disabled(playback.words.isEmpty)
 
                     Button {
@@ -155,6 +157,7 @@ struct SpeedReaderPanelView: View {
                     } label: {
                         Image(systemName: "forward.frame.fill")
                     }
+                    .keyboardShortcut(.rightArrow, modifiers: [])
                     .disabled(playback.words.isEmpty)
                 }
                 .controlGroupStyle(.navigation)
@@ -184,6 +187,25 @@ struct SpeedReaderPanelView: View {
         .animation(nil, value: playback.isPlaying)
         .transaction { transaction in
             transaction.animation = nil
+        }
+        .background {
+            Group {
+                Button("Restart") {
+                    playback.setWordIndex(0, pausePlayback: true)
+                    playback.playPauseRestart()
+                }
+                .keyboardShortcut("r", modifiers: [])
+                Button("Start") {
+                    playback.setWordIndex(0, pausePlayback: true)
+                }
+                .keyboardShortcut(.home, modifiers: [])
+                Button("End") {
+                    playback.setWordIndex(max(0, playback.words.count - 1), pausePlayback: true)
+                }
+                .keyboardShortcut(.end, modifiers: [])
+            }
+            .opacity(0)
+            .accessibilityHidden(true)
         }
     }
 
