@@ -376,7 +376,9 @@ export function Reader(
       : readerSettings.setWordsPerMinute;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [inputTab, setInputTab] = useState<"edit" | "scrub">("edit");
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const scrubContainerRef = useRef<HTMLDivElement>(null);
   const fontSize = isFull
     ? readerSettings.fontSize
     : ((props as ReaderPanelProps).fontSize ?? "md");
@@ -449,6 +451,28 @@ export function Reader(
       onWordIndexChange?.(effectiveWordIndex);
     }
   }, [effectiveWordIndex, onWordIndexChange]);
+
+  // Scroll scrub view to keep highlighted word visible
+  useEffect(() => {
+    if (!isFull || inputTab !== "scrub" || words.length === 0) return;
+    const container = scrubContainerRef.current;
+    if (!container) return;
+    const span = container.querySelector(
+      `[data-word-index="${activeWordIndex}"]`,
+    ) as HTMLElement | null;
+    if (span) {
+      const rect = span.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const margin = 40;
+      const isComfortablyVisible =
+        rect.top >= containerRect.top + margin &&
+        rect.bottom <= containerRect.bottom - margin;
+      if (!isComfortablyVisible) {
+        const behavior = reduceMotion ? "auto" : "smooth";
+        span.scrollIntoView({ behavior, block: "center" });
+      }
+    }
+  }, [isFull, inputTab, activeWordIndex, words.length, reduceMotion]);
 
   useEffect(() => {
     if (!isPlaying || words.length === 0) return;
@@ -906,19 +930,94 @@ export function Reader(
           isPlaying ? "opacity-40" : "opacity-100",
         )}
       >
-        <label
-          htmlFor="reader-text"
-          className="mb-2 block text-sm font-medium text-muted-foreground"
-        >
-          Text to read{words.length > 0 && ` (${words.length} words)`}
-        </label>
-        <Textarea
-          id="reader-text"
-          value={inputText}
-          onChange={(e) => handleTextChange(e.target.value)}
-          placeholder="Paste text here..."
-          className="min-h-44 resize-y"
-        />
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <label
+            htmlFor={inputTab === "edit" ? "reader-text" : undefined}
+            className="text-sm font-medium text-muted-foreground"
+          >
+            Text to read{words.length > 0 && ` (${words.length} words)`}
+          </label>
+          <div
+            role="tablist"
+            aria-label="Input mode"
+            className="flex rounded-lg border border-border bg-muted/50 p-0.5"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={inputTab === "edit"}
+              aria-controls="reader-text-panel"
+              id="reader-edit-tab"
+              onClick={() => setInputTab("edit")}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                inputTab === "edit"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={inputTab === "scrub"}
+              aria-controls="reader-scrub-panel"
+              id="reader-scrub-tab"
+              onClick={() => setInputTab("scrub")}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                inputTab === "scrub"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Scrub
+            </button>
+          </div>
+        </div>
+        {inputTab === "edit" ? (
+          <Textarea
+            id="reader-text"
+            value={inputText}
+            onChange={(e) => handleTextChange(e.target.value)}
+            placeholder="Paste text here..."
+            className="min-h-44 resize-y"
+            aria-labelledby="reader-edit-tab"
+          />
+        ) : (
+          <div
+            ref={scrubContainerRef}
+            id="reader-scrub-panel"
+            role="tabpanel"
+            aria-labelledby="reader-scrub-tab"
+            className={cn(
+              "reader-article min-h-44 max-h-64 overflow-y-auto rounded-lg border border-input bg-background px-3 py-3 text-base leading-7",
+              "cursor-pointer [&_[data-word-index]]:cursor-pointer [&_[data-word-index]]:rounded-sm [&_[data-word-index]]:transition-colors [&_[data-word-index]]:hover:bg-muted/50",
+            )}
+          >
+            {words.length === 0 ? (
+              <p className="text-muted-foreground">
+                Paste text in Edit mode to scrub through it.
+              </p>
+            ) : (
+              words.flatMap((word, i) => [
+                ...(i > 0 ? [" " as const] : []),
+                <span
+                  key={i}
+                  data-word-index={i}
+                  className={cn(i === activeWordIndex && "reader-highlight")}
+                  onClick={() => {
+                    setEffectiveWordIndex(i);
+                    setIsPlaying(false);
+                  }}
+                >
+                  {word}
+                </span>,
+              ])
+            )}
+          </div>
+        )}
       </section>
     </main>
   );
