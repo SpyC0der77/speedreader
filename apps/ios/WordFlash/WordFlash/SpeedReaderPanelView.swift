@@ -107,6 +107,7 @@ struct SpeedReaderPanelView: View {
                 .clipShape(RoundedRectangle(cornerRadius: panelCornerRadius, style: .continuous))
             }
             .frame(minHeight: readerBoxMinHeight, maxHeight: readerBoxMaxHeight)
+            .animation(nil, value: playback.wordIndex)
 
             VStack(spacing: 10) {
                 HStack(spacing: 8) {
@@ -118,6 +119,7 @@ struct SpeedReaderPanelView: View {
                         .font(.subheadline.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
+                .animation(nil, value: playback.wordIndex)
 
                 if showProgressSlider && !playback.words.isEmpty {
                     Slider(
@@ -130,40 +132,58 @@ struct SpeedReaderPanelView: View {
                     ) { editing in
                         if editing { playback.pause() }
                     }
+                    .animation(.easeInOut(duration: 0.15), value: playback.wordIndex)
                 }
             }
             .opacity(controlsOpacity)
+            .animation(.easeInOut(duration: 0.25), value: playback.isPlaying)
 
             VStack(spacing: isCompactHeight ? 8 : 10) {
-                ControlGroup {
+                HStack(spacing: isCompactHeight ? 32 : 40) {
                     Button {
                         guard !playback.words.isEmpty else { return }
                         playback.setWordIndex(max(0, playback.wordIndex - 1), pausePlayback: true)
                     } label: {
-                        Image(systemName: "backward.frame.fill")
+                        Image(systemName: "backward.fill")
+                            .font(.title2)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Previous word")
                     .keyboardShortcut(.leftArrow, modifiers: [])
                     .disabled(playback.words.isEmpty)
+                    .opacity(playback.words.isEmpty ? 0.4 : 1)
 
                     Button {
                         guard !playback.words.isEmpty else { return }
                         playback.playPauseRestart()
                     } label: {
-                        Image(systemName: playback.isPlaying ? "pause.fill" : (playback.isFinished ? "arrow.counterclockwise" : "play.fill"))
+                        Image(systemName: playback.isPlaying ? "pause.circle.fill" : (playback.isFinished ? "arrow.counterclockwise.circle.fill" : "play.circle.fill"))
+                            .font(.system(size: 56))
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel(playback.isPlaying ? "Pause" : (playback.isFinished ? "Restart" : "Play"))
                     .keyboardShortcut(.space, modifiers: [])
                     .disabled(playback.words.isEmpty)
+                    .opacity(playback.words.isEmpty ? 0.4 : 1)
+                    .animation(nil, value: playback.isPlaying)
 
                     Button {
                         guard !playback.words.isEmpty else { return }
                         playback.setWordIndex(min(max(0, playback.words.count - 1), playback.wordIndex + 1), pausePlayback: true)
                     } label: {
-                        Image(systemName: "forward.frame.fill")
+                        Image(systemName: "forward.fill")
+                            .font(.title2)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Next word")
                     .keyboardShortcut(.rightArrow, modifiers: [])
                     .disabled(playback.words.isEmpty)
+                    .opacity(playback.words.isEmpty ? 0.4 : 1)
                 }
-                .controlGroupStyle(.navigation)
+                .buttonStyle(.plain)
+                .animation(nil, value: playback.isPlaying)
 
                 if showWpmControl {
                     HStack {
@@ -179,6 +199,7 @@ struct SpeedReaderPanelView: View {
                 }
             }
             .opacity(controlsOpacity)
+            .animation(.easeInOut(duration: 0.25), value: playback.isPlaying)
         }
         .onAppear {
             syncTiming()
@@ -186,11 +207,6 @@ struct SpeedReaderPanelView: View {
         .onChange(of: settings.wordsPerMinute) { _, _ in syncTiming() }
         .onChange(of: settings.sentenceEndDurationMs) { _, _ in syncTiming() }
         .onChange(of: settings.speechBreakDurationMs) { _, _ in syncTiming() }
-        .animation(nil, value: playback.wordIndex)
-        .animation(nil, value: playback.isPlaying)
-        .transaction { transaction in
-            transaction.animation = nil
-        }
         .background {
             Group {
                 Button("Restart") {

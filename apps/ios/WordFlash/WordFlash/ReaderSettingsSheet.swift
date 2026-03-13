@@ -70,10 +70,10 @@ struct ReaderSettingsSheet: View {
                 }
 
                 Section("Keyboard Shortcuts") {
-                    LabeledContent("Play/Pause", Text("Space"))
-                    LabeledContent("Restart", Text("R"))
-                    LabeledContent("Previous/Next word", Text("← →"))
-                    LabeledContent("Jump to start/end", Text("Home / End"))
+                    LabeledContent("Play/Pause", value: "Space")
+                    LabeledContent("Restart", value: "R")
+                    LabeledContent("Previous/Next word", value: "← →")
+                    LabeledContent("Jump to start/end", value: "Home / End")
                 }
 
                 Section {
