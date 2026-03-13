@@ -9,6 +9,7 @@ struct TextReaderScreen: View {
 
     @State private var inputText = sampleText
     @State private var showSettings = false
+    @State private var showFullscreen = false
 
     private var words: [String] {
         SpeedReaderCore.parseWords(inputText)
@@ -107,13 +108,28 @@ struct TextReaderScreen: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
+                    HStack(spacing: 12) {
+                        if !words.isEmpty {
+                            Button {
+                                showFullscreen = true
+                            } label: {
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            }
+                            .accessibilityLabel("Enter fullscreen")
+                        }
+
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                        .accessibilityLabel("Open reader settings")
                     }
-                    .accessibilityLabel("Open reader settings")
                 }
+            }
+            .fullScreenCover(isPresented: $showFullscreen) {
+                FullscreenReaderView(playback: playback)
+                    .environmentObject(settings)
             }
             .sheet(isPresented: $showSettings) {
                 ReaderSettingsSheet()

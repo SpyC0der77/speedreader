@@ -8,6 +8,11 @@ struct SpeedReaderPanelView: View {
     var showProgressSlider = true
     var showWpmControl = true
     var fillHeight = false
+    var fontSizeOverride: CGFloat?
+
+    private var effectiveFontSize: CGFloat {
+        fontSizeOverride ?? settings.fontSize.pointSize
+    }
 
     private var parts: (left: String, focal: String, right: String) {
         SpeedReaderCore.wordParts(for: playback.activeWord)
@@ -67,20 +72,21 @@ struct SpeedReaderPanelView: View {
                     )
 
                 GeometryReader { geometry in
+                    let verticalLineHeight = geometry.size.height - 2 * topBottomInset
                     ZStack {
                         Rectangle()
                             .fill(Color.white.opacity(0.16))
-                            .frame(width: 1, height: centerLineHeight)
+                            .frame(width: 1, height: verticalLineHeight)
                             .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
 
                         Rectangle()
                             .fill(Color.white.opacity(0.12))
-                            .frame(height: 1)
+                            .frame(width: geometry.size.width, height: 1)
                             .position(x: geometry.size.width / 2, y: topBottomInset)
 
                         Rectangle()
                             .fill(Color.white.opacity(0.12))
-                            .frame(height: 1)
+                            .frame(width: geometry.size.width, height: 1)
                             .position(
                                 x: geometry.size.width / 2,
                                 y: geometry.size.height - topBottomInset
@@ -88,16 +94,16 @@ struct SpeedReaderPanelView: View {
 
                         HStack(spacing: 0) {
                             Text(parts.left)
-                                .font(settings.font(size: settings.fontSize.pointSize))
+                                .font(settings.font(size: effectiveFontSize))
                                 .foregroundStyle(Color.white.opacity(0.88))
                                 .frame(maxWidth: .infinity, alignment: .trailing)
 
                             Text(parts.focal.isEmpty ? "•" : parts.focal)
-                                .font(settings.font(size: settings.fontSize.pointSize))
+                                .font(settings.font(size: effectiveFontSize))
                                 .foregroundStyle(settings.focalColor.color)
 
                             Text(parts.right)
-                                .font(settings.font(size: settings.fontSize.pointSize))
+                                .font(settings.font(size: effectiveFontSize))
                                 .foregroundStyle(Color.white.opacity(0.88))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }

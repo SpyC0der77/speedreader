@@ -26,6 +26,7 @@ struct ArticleReaderScreen: View {
     @State private var errorMessage: String?
     @State private var compactSection: CompactSection = .reader
     @State private var showSettings = false
+    @State private var showFullscreen = false
     @State private var previousArticles = ReadingPersistence.loadPreviousArticles()
     @State private var loadTask: Task<Void, Never>?
 
@@ -100,13 +101,28 @@ struct ArticleReaderScreen: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
+                    HStack(spacing: 12) {
+                        if article != nil, !playback.words.isEmpty {
+                            Button {
+                                showFullscreen = true
+                            } label: {
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            }
+                            .accessibilityLabel("Enter fullscreen")
+                        }
+
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                        .accessibilityLabel("Open reader settings")
                     }
-                    .accessibilityLabel("Open reader settings")
                 }
+            }
+            .fullScreenCover(isPresented: $showFullscreen) {
+                FullscreenReaderView(playback: playback)
+                    .environmentObject(settings)
             }
             .sheet(isPresented: $showSettings) {
                 ReaderSettingsSheet()
