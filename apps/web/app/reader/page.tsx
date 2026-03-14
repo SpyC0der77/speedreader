@@ -790,8 +790,9 @@ export default function ReaderPage() {
                   )}
                 />
                 <Dialog.Content
+                  data-settings-modal
                   className={cn(
-                    "fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border bg-background p-4 shadow-xl sm:rounded-xl sm:p-6",
+                    "fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border bg-background p-4 shadow-xl scrollbar-hide sm:rounded-xl sm:p-6",
                     reduceTransparency ? "border-zinc-700" : "border-white/10",
                     "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
                   )}
@@ -802,7 +803,7 @@ export default function ReaderPage() {
                   <Dialog.Description className="mb-4 shrink-0 text-sm text-muted-foreground">
                     Adjust pause durations (values at 250 WPM; scale with speed).
                   </Dialog.Description>
-                  <div className="min-h-0 flex-1 overflow-y-auto">
+                  <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
                     <ReaderSettingsContent
                       idPrefix=""
                       theme={effectiveTheme}
@@ -836,7 +837,8 @@ export default function ReaderPage() {
                 </Button>
               </DrawerTrigger>
               <DrawerContent
-                className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden"
+                data-settings-modal
+                className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden scrollbar-hide"
                 overlayClassName={
                   reduceTransparency ? "bg-black" : undefined
                 }
@@ -847,7 +849,7 @@ export default function ReaderPage() {
                     Adjust pause durations (values at 250 WPM; scale with speed).
                   </DrawerDescription>
                 </DrawerHeader>
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+                <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide px-4 pb-6">
                   <ReaderSettingsContent
                     idPrefix="drawer-"
                     theme={effectiveTheme}

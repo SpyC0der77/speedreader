@@ -11,6 +11,12 @@ import React, {
   useState,
 } from "react";
 import { Dialog } from "radix-ui";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -149,175 +155,241 @@ export function ReaderSettingsContent({
   setReduceMotion,
   onResetDefaults,
 }: ReaderSettingsContentProps) {
+  const ACCORDION_ITEMS = ["timing", "colors", "font", "accessibility"] as const;
+  const STORAGE_KEY = "wordflash-settings-accordion";
+
+  const [accordionValue, setAccordionValue] = useState<string[]>([
+    ...ACCORDION_ITEMS,
+  ]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (
+          Array.isArray(parsed) &&
+          parsed.every((v) => typeof v === "string")
+        ) {
+          const valid = parsed.filter((v) =>
+            ACCORDION_ITEMS.includes(v as (typeof ACCORDION_ITEMS)[number]),
+          );
+          if (valid.length > 0) {
+            setAccordionValue(valid);
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load from localStorage on mount only
+  }, []);
+
+  const handleAccordionChange = (value: string[]) => {
+    setAccordionValue(value);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div>
-        <label
-          htmlFor={`${idPrefix}theme-select`}
-          className="mb-2 block text-sm font-medium text-foreground"
-        >
-          Theme
-        </label>
-        <Select value={theme} onValueChange={(v) => setTheme(v as Theme)}>
-          <SelectTrigger id={`${idPrefix}theme-select`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(THEMES) as Theme[]).map((key) => (
-              <SelectItem key={key} value={key}>
-                {THEMES[key]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label
-          htmlFor={`${idPrefix}font-size-select`}
-          className="mb-2 block text-sm font-medium text-foreground"
-        >
-          Font size
-        </label>
-        <Select
-          value={fontSize}
-          onValueChange={(v) => setFontSize(v as FontSizeKey)}
-        >
-          <SelectTrigger id={`${idPrefix}font-size-select`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(FONT_SIZES) as FontSizeKey[]).map((key) => (
-              <SelectItem key={key} value={key}>
-                {FONT_SIZES[key].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label
-          htmlFor={`${idPrefix}font-family-select`}
-          className="mb-2 block text-sm font-medium text-foreground"
-        >
-          Font family
-        </label>
-        <Select
-          value={fontFamily}
-          onValueChange={(v) => setFontFamily(v as FontFamilyKey)}
-        >
-          <SelectTrigger id={`${idPrefix}font-family-select`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(FONT_FAMILIES) as FontFamilyKey[]).map((key) => (
-              <SelectItem key={key} value={key}>
-                {FONT_FAMILIES[key].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label
-          htmlFor={`${idPrefix}focal-color-select`}
-          className="mb-2 block text-sm font-medium text-foreground"
-        >
-          Focal character color
-        </label>
-        <Select
-          value={focalColor}
-          onValueChange={(v) => setFocalColor(v as FocalColorKey)}
-        >
-          <SelectTrigger id={`${idPrefix}focal-color-select`}>
-            <span className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "size-3 shrink-0 rounded-full",
-                  FOCAL_COLORS[focalColor].previewClass,
-                )}
+      <Accordion
+        type="multiple"
+        value={accordionValue}
+        onValueChange={handleAccordionChange}
+        className="w-full"
+      >
+        <AccordionItem value="timing">
+          <AccordionTrigger>Timing</AccordionTrigger>
+          <AccordionContent className="space-y-4">
+            <div>
+              <label
+                htmlFor={`${idPrefix}sentence-end-full`}
+                className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Sentence End Duration ({sentenceEndDurationMs}ms)
+              </label>
+              <Slider
+                id={`${idPrefix}sentence-end-full`}
+                min={0}
+                max={1000}
+                step={50}
+                value={[sentenceEndDurationMs]}
+                onValueChange={([v]) =>
+                  setSentenceEndDurationMs(v ?? DEFAULT_SENTENCE_END_MS)
+                }
               />
-              <SelectValue />
-            </span>
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(FOCAL_COLORS) as FocalColorKey[]).map((key) => (
-              <SelectItem key={key} value={key}>
-                <span className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "size-3 shrink-0 rounded-full",
-                      FOCAL_COLORS[key].previewClass,
-                    )}
-                  />
-                  {FOCAL_COLORS[key].label}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label
-          htmlFor={`${idPrefix}sentence-end-full`}
-          className="mb-2 block text-sm font-medium text-foreground"
-        >
-          Sentence End Duration ({sentenceEndDurationMs}ms)
-        </label>
-        <Slider
-          id={`${idPrefix}sentence-end-full`}
-          min={0}
-          max={1000}
-          step={50}
-          value={[sentenceEndDurationMs]}
-          onValueChange={([v]) =>
-            setSentenceEndDurationMs(v ?? DEFAULT_SENTENCE_END_MS)
-          }
-        />
-      </div>
-      <div>
-        <label
-          htmlFor={`${idPrefix}speech-break-full`}
-          className="mb-2 block text-sm font-medium text-foreground"
-        >
-          Speech Break Duration ({speechBreakDurationMs}ms)
-        </label>
-        <Slider
-          id={`${idPrefix}speech-break-full`}
-          min={0}
-          max={1000}
-          step={25}
-          value={[speechBreakDurationMs]}
-          onValueChange={([v]) =>
-            setSpeechBreakDurationMs(v ?? DEFAULT_SPEECH_BREAK_MS)
-          }
-        />
-      </div>
-      <div className="flex items-center justify-between gap-4">
-        <label
-          htmlFor={`${idPrefix}reduce-transparency-reader`}
-          className="text-sm font-medium text-foreground"
-        >
-          Reduce transparency
-        </label>
-        <Switch
-          id={`${idPrefix}reduce-transparency-reader`}
-          checked={reduceTransparency}
-          onCheckedChange={setReduceTransparency}
-        />
-      </div>
-      <div className="flex items-center justify-between gap-4">
-        <label
-          htmlFor={`${idPrefix}reduce-motion-reader`}
-          className="text-sm font-medium text-foreground"
-        >
-          Reduce motion
-        </label>
-        <Switch
-          id={`${idPrefix}reduce-motion-reader`}
-          checked={reduceMotion}
-          onCheckedChange={setReduceMotion}
-        />
-      </div>
+            </div>
+            <div>
+              <label
+                htmlFor={`${idPrefix}speech-break-full`}
+                className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Speech Break Duration ({speechBreakDurationMs}ms)
+              </label>
+              <Slider
+                id={`${idPrefix}speech-break-full`}
+                min={0}
+                max={1000}
+                step={25}
+                value={[speechBreakDurationMs]}
+                onValueChange={([v]) =>
+                  setSpeechBreakDurationMs(v ?? DEFAULT_SPEECH_BREAK_MS)
+                }
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="colors">
+          <AccordionTrigger>Colors</AccordionTrigger>
+          <AccordionContent className="space-y-4">
+            <div>
+              <label
+                htmlFor={`${idPrefix}theme-select`}
+                className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Theme
+              </label>
+              <Select value={theme} onValueChange={(v) => setTheme(v as Theme)}>
+                <SelectTrigger id={`${idPrefix}theme-select`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(THEMES) as Theme[]).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {THEMES[key]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label
+                htmlFor={`${idPrefix}focal-color-select`}
+                className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Focal character color
+              </label>
+              <Select
+                value={focalColor}
+                onValueChange={(v) => setFocalColor(v as FocalColorKey)}
+              >
+                <SelectTrigger id={`${idPrefix}focal-color-select`}>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "size-3 shrink-0 rounded-full",
+                        FOCAL_COLORS[focalColor].previewClass,
+                      )}
+                    />
+                    <SelectValue />
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(FOCAL_COLORS) as FocalColorKey[]).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "size-3 shrink-0 rounded-full",
+                            FOCAL_COLORS[key].previewClass,
+                          )}
+                        />
+                        {FOCAL_COLORS[key].label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="font">
+          <AccordionTrigger>Font</AccordionTrigger>
+          <AccordionContent className="space-y-4">
+            <div>
+              <label
+                htmlFor={`${idPrefix}font-size-select`}
+                className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Font size
+              </label>
+              <Select
+                value={fontSize}
+                onValueChange={(v) => setFontSize(v as FontSizeKey)}
+              >
+                <SelectTrigger id={`${idPrefix}font-size-select`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(FONT_SIZES) as FontSizeKey[]).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {FONT_SIZES[key].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label
+                htmlFor={`${idPrefix}font-family-select`}
+                className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Font family
+              </label>
+              <Select
+                value={fontFamily}
+                onValueChange={(v) => setFontFamily(v as FontFamilyKey)}
+              >
+                <SelectTrigger id={`${idPrefix}font-family-select`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(FONT_FAMILIES) as FontFamilyKey[]).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {FONT_FAMILIES[key].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="accessibility">
+          <AccordionTrigger>Accessibility</AccordionTrigger>
+          <AccordionContent className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <label
+                htmlFor={`${idPrefix}reduce-transparency-reader`}
+                className="text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Reduce transparency
+              </label>
+              <Switch
+                id={`${idPrefix}reduce-transparency-reader`}
+                checked={reduceTransparency}
+                onCheckedChange={setReduceTransparency}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <label
+                htmlFor={`${idPrefix}reduce-motion-reader`}
+                className="text-sm font-medium text-zinc-600 dark:text-zinc-500"
+              >
+                Reduce motion
+              </label>
+              <Switch
+                id={`${idPrefix}reduce-motion-reader`}
+                checked={reduceMotion}
+                onCheckedChange={setReduceMotion}
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
       <Button
         variant="outline"
         className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
@@ -735,11 +807,11 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
               wordDisplayClassName,
             )}
           >
-            <span className="justify-self-end pr-1 text-muted-foreground dark:text-zinc-100">
+            <span className="justify-self-end pr-1 text-zinc-700 dark:text-zinc-100">
               {left}
             </span>
             <span className={focalColorClassName}>{focalCharacter || "•"}</span>
-            <span className="justify-self-start pl-1 text-muted-foreground dark:text-zinc-100">
+            <span className="justify-self-start pl-1 text-zinc-700 dark:text-zinc-100">
               {right}
             </span>
           </div>
@@ -747,7 +819,7 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
 
         <div
           className={cn(
-            "mt-2 flex items-center justify-center gap-4 px-2 text-center text-sm text-muted-foreground transition-opacity duration-300 sm:mt-3",
+            "mt-2 flex items-center justify-center gap-4 px-2 text-center text-sm text-zinc-700 transition-opacity duration-300 dark:text-muted-foreground sm:mt-3",
             isPlaying ? "opacity-40" : "opacity-100",
           )}
         >
@@ -869,8 +941,9 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
                 )}
               />
               <Dialog.Content
+                data-settings-modal
                 className={cn(
-                  "fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border bg-background p-4 shadow-xl sm:rounded-xl sm:p-6",
+                  "fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border bg-background p-4 shadow-xl scrollbar-hide sm:rounded-xl sm:p-6",
                   reduceTransparency ? "border-zinc-700" : "border-white/10",
                   "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
                 )}
@@ -881,7 +954,7 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
                 <Dialog.Description className="mb-4 shrink-0 text-sm text-muted-foreground">
                   Adjust pause durations (values at 250 WPM; scale with speed).
                 </Dialog.Description>
-                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
                   <ReaderSettingsContent
                     idPrefix=""
                     theme={theme}
@@ -919,7 +992,8 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
               </Button>
             </DrawerTrigger>
             <DrawerContent
-              className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden"
+              data-settings-modal
+              className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden scrollbar-hide"
               overlayClassName={reduceTransparency ? "bg-black" : undefined}
             >
               <DrawerHeader className="shrink-0 text-left">
@@ -928,7 +1002,7 @@ export function Reader(props: ReaderProps): React.ReactElement | null {
                   Adjust pause durations (values at 250 WPM; scale with speed).
                 </DrawerDescription>
               </DrawerHeader>
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide px-4 pb-6">
                 <ReaderSettingsContent
                   idPrefix="drawer-"
                   theme={theme}
